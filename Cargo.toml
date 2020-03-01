@@ -1,0 +1,8 @@
+[package]
+name = "drakeema-rs"
+version = "0.1.0"
+authors = ["kedamaDQ <kedama@foresdon.jp>"]
+edition = "2018"
+
+[dependencies]
+mastors = { path = "../mastors" }
