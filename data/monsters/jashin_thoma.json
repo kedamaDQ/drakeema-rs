@@ -1,0 +1,9 @@
+{
+	"id": "jashin_thoma",
+	"display": "お兄ちゃん",
+	"official_name": "幻妖の黒公子",
+	"nickname_regex": "(?:黒公子|くろこうし|クロコウシ|[おオ]?(?:兄|[にニ][いイぃィ])(?:ちゃん|チャン))",
+	"resistances": [
+		[]
+	]
+}

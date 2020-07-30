@@ -1,0 +1,9 @@
+{
+    "reference_date": "2018-03-20",
+    "monsters": [
+        { "id": "regrog", "monster": "seishugosya_regrog", "offset": 0 },
+        { "id": "scorpide", "monster": "seishugosya_scorpide", "offset": 2 },
+        { "id": "jelzerg", "monster": "seishugosya_jelzerg", "offset": 1 },
+        { "id": "gardodon", "monster": "seishugosya_gardodon", "offset": 1 }
+    ]
+}

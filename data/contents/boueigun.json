@@ -1,0 +1,15 @@
+{
+	"reference_datetime": "2020-06-05 15:00:00",
+	"monsters": [
+		{ "id": "juga", "monster": "boueigun_juga", "dulation": 60 },
+		{ "id": "tekki", "monster": "boueigun_tekki", "duration": 60 },
+		{ "id": "zoma", "monster": "boueigun_zoma", "duration": 60 },
+		{ "id": "ryurin", "monster": "boueigun_ryurin", "duration": 60 },
+		{ "id": "all", "monster": "boueigun_all", "duration": 60 },
+		{ "id": "shigoku", "monster": "boueigun_shigoku", "duration": 60 },
+		{ "id": "kyochu", "monster": "boueigun_kyochu", "duration": 60 },
+		{ "id": "kaiyo", "monster": "boueigun_kaiyo", "duration": 60 },
+		{ "id": "ryurin", "monster": "boueigun_ryurin", "duration": 60 },
+		{ "id": "all", "monster": "boueigun_all", "duration": 60 }
+	]
+}

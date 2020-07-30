@@ -1,0 +1,9 @@
+{
+	"id": "jashin_zel",
+	"display": "ゼルさん",
+	"official_name": "戦慄の魔元帥",
+	"nickname_regex": "(?:魔元帥|まげんすい|ゼル|ぜる|ｾﾞﾙ)",
+	"resistances": [
+		["呪い"]
+	]
+}
