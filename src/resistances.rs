@@ -166,6 +166,38 @@ impl Resistances<Vec<Vec<Resistance>>> {
 			),
 		}
 	}
+
+	pub fn display<T, U>(&self, area_names: Option<T>) -> String
+	where
+		T: AsRef<[U]>,
+		U: AsRef<str>,
+	{
+		if self.len() == 1 {
+			self.iter()
+				.next()
+				.expect("Resistances is not set")
+				.iter()
+				.map(|r| r.to_string())
+				.collect::<Vec<String>>()
+				.join("、")
+		} else {
+			let area_names = area_names.expect("Area names not found for multiple resistance");
+			self.iter()
+				.enumerate()
+				.map(|(i, resistances)| {
+					area_names.as_ref()[i].as_ref().to_string() + "は " +
+					resistances.iter()
+						.map(|r| r.to_string())
+						.collect::<Vec<String>>()
+						.join("、")
+						.as_ref()
+				})
+				.collect::<Vec<String>>()
+				.join("、")
+		}
+	}
+
+
 }
 
 impl<'de> de::Deserialize<'de> for Resistances<Vec<Vec<Resistance>>> {
