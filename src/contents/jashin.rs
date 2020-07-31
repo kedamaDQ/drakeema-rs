@@ -1,11 +1,11 @@
 use std::fs::File;
 use std::io::BufReader;
-use chrono::{ Datelike, DateTime, Local };
+use chrono::{ Datelike, DateTime, Duration, Local };
 use serde::Deserialize;
 use crate::{
 	Error,
 	monsters::Monsters,
-	resistances::{ Resistance, Resistances },
+	resistances::Resistances,
 	Result,
 };
 
@@ -37,20 +37,41 @@ impl<'a> Jashin<'a, JashinJson> {
 	}
 
 	pub fn announcement(&self, at: DateTime<Local>) -> String {
-		unimplemented!();
+		use std::ops::Add;
+
+		let title_today = self.title(at);
+		let title_tomorrow = self.title(at.add(Duration::hours(24)));
+		let title_yesterday = self.title(at.add(Duration::hours(-24)));
+
+		if title_today != title_yesterday {
+			// Date is start date of the period
+			self.announcement_at_start
+				.replace("__TITLE__", title_today.display_title())
+				.replace("__MONSTERS__", title_today.display_monsters(self.monsters).as_str())
+				.replace("__RESISTANCES__", title_today.display_resistances(self.monsters, Some(&self.area_names)).as_str())
+		} else if title_today != title_tomorrow {
+			// Date is end date of period
+			self.announcement_at_end
+				.replace("__TITLE1__", title_today.display_title())
+				.replace("__TITLE2__", title_tomorrow.display_title())
+		} else {
+			// Date is duaring the period
+			self.announcement
+				.replace("__TITLE__", title_today.display_title())
+		}
 	}
 
 	pub fn information(&self, at: DateTime<Local>) -> String {
 		let title = self.title(at);
 		self.information
-			.replace("__TITLE__", title.display())
+			.replace("__TITLE__", title.display_title())
 			.replace(
 				"__MONSTERS__",
-				title.monsters_display(&self.monsters).as_str()
+				title.display_monsters(&self.monsters).as_str()
 			)
 			.replace(
 				"__RESISTANCES__",
-				title.resistances_display(&self.monsters, self.area_names.as_slice()).as_str()
+				title.display_resistances(&self.monsters, Some(&self.area_names)).as_str()
 			)
 	}
 
@@ -79,7 +100,6 @@ impl<'a> Jashin<'a, JashinJson> {
 		self.tables().iter()
 			.rev()
 			.find(|table| {
-				println!("{}: {}", table.start_day, at.day() >= table.start_day && at.time() >= self.reference_date.time());
 				at.day() > table.start_day ||
 				(at.day() == table.start_day && at.time() >= self.reference_date.time())
 			})
@@ -144,11 +164,11 @@ struct Title {
 }
 
 impl Title {
-	fn display(&self) -> &str {
+	fn display_title(&self) -> &str {
 		self.display.as_str()
 	}
 
-	fn monsters_display(&self, monsters: &Monsters) -> String {
+	fn display_monsters(&self, monsters: &Monsters) -> String {
 		self.monsters.iter()
 			.map(|id| monsters
 				.get(id)
@@ -160,45 +180,51 @@ impl Title {
 			.join("と")
 	}
 
-	fn resistances_display(&self, monsters: &Monsters, area_names: &[String]) -> String {
-		let resistances = self.resistances(monsters);
-		if resistances.len() == 1 {
-			resistances.iter()
-				.next()
-				.expect("Resistances is not set")
-				.iter()
-				.map(|r| r.to_string())
-				.collect::<Vec<String>>()
-				.join("、")
-		} else {
-			resistances.iter()
-				.enumerate()
-				.map(|(i, resistances)| {
-					area_names[i].to_string() + "は " +
-					resistances.iter()
-						.map(|r| r.to_string())
-						.collect::<Vec<String>>()
-						.join("、")
-						.as_ref()
-				})
-				.collect::<Vec<String>>()
-				.join("、")
-		}
-	}
-
-	fn resistances(&self, monsters: &Monsters) -> Resistances<Vec<Vec<Resistance>>> {
-		let resistances_iter = self.monsters.iter()
+	fn display_resistances<T, U>(&self, monsters: &Monsters, area_names: Option<T>) -> String
+	where
+		T: AsRef<[U]>,
+		U: AsRef<str>,
+	{
+		self.monsters.iter()
 			.map(|id| monsters
 				.get(id)
 				.expect("Unknown monster ID")
 				.resistances()
-			);
-		
-		let resistances = Resistances::new();
-		resistances_iter.fold(resistances, |acc, r| acc.join(r))
+			)
+			.fold(Resistances::new(), |acc, r| acc.join(r))
+			.display(area_names)
 	}
 }
 
+use std::cmp;
+
+impl cmp::PartialEq for Title {
+	fn eq(&self, other: &Self) -> bool {
+		self.id == other.id
+	}
+}
+
+impl cmp::PartialOrd for Title {
+	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+		Some(self.cmp(other))
+	}
+}
+
+impl cmp::Eq for Title {}
+
+impl cmp::Ord for Title {
+	fn cmp(&self, other: &Self) -> cmp::Ordering {
+		self.id.cmp(&other.id)
+	}
+}
+
+use std::hash;
+
+impl hash::Hash for Title {
+	fn hash<H: hash::Hasher>(&self, state: &mut H) {
+		self.id.hash(state);
+	}
+}
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -313,8 +339,8 @@ mod tests {
         	"area_names": ["一獄", "二獄", "三獄", "四獄", "五獄", "はい？獄"],
         	"announcement": "本日の邪神の宮殿は __TITLE__ です！",
         	"announcement_at_start": "邪神の宮殿は本日から __TITLE__ です！相手は __MONSTERS__、あると良い耐性は __RESISTANCES__ です！",
-        	"announcement_at_end": "邪神の宮殿は __TITLE1__ です！明日からは __TITLE2__ が始まります！",
-        	"information": "本日の邪神の宮殿は __TITLE__ です！相手は __MONSTERS__、あると良い耐性は __RESISTANCES__ です！",
+			"announcement_at_end": "本日の邪神の宮殿は __TITLE1__ です！明日からは __TITLE2__ が始まります！",
+        	"information": "本日の邪神の宮殿は __TITLE__ です！相手は__MONSTERS__、あると良い耐性は __RESISTANCES__ です！",
         	"tables": [
         		{
         			"start_day": 10,
