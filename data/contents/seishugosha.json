@@ -1,9 +1,9 @@
 {
-    "reference_date": "2018-03-20",
+    "reference_date": "2018-03-20T06:00:00.000+09:00",
     "monsters": [
-        { "id": "regrog", "monster": "seishugosya_regrog", "offset": 0 },
-        { "id": "scorpide", "monster": "seishugosya_scorpide", "offset": 2 },
-        { "id": "jelzerg", "monster": "seishugosya_jelzerg", "offset": 1 },
-        { "id": "gardodon", "monster": "seishugosya_gardodon", "offset": 1 }
+        { "id": "regrog", "monster_id": "seishugosya_regrog", "offset": 0 },
+        { "id": "scorpide", "monster_id": "seishugosya_scorpide", "offset": 2 },
+        { "id": "jelzerg", "monster_id": "seishugosya_jelzerg", "offset": 1 },
+        { "id": "gardodon", "monster_id": "seishugosya_gardodon", "offset": 1 }
     ]
 }
