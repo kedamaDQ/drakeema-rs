@@ -26,4 +26,10 @@ pub enum Error {
 	UnknownMonsterIdError(
 		String,
 	),
+
+	#[error(display = "Invalid regex: {}", _0)]
+	InvalidRegexError(
+		#[error(source, from)]
+		regex::Error,
+	),
 }
