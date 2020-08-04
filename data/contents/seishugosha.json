@@ -1,6 +1,6 @@
 {
     "reference_date": "2018-04-20T06:00:00.000+09:00",
-    "level_names": ["Ｉ", "２", "３"],
+    "level_names": ["Ⅰ", "Ⅱ", "Ⅲ"],
     "announcement": {
         "start": "本日の 聖守護者の闘戦記 は……\n",
         "parts": "__NAME__：__LEVEL__",
