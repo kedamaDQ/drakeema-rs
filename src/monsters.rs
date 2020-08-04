@@ -73,6 +73,10 @@ impl Monster {
 	pub fn resistances(&self) -> &Resistances<Vec<Vec<Resistance>>> {
 		&self.resistances
 	}
+
+	pub fn is_match(&self, text: impl AsRef<str>) -> bool {
+		self.nickname_regex().is_match(text.as_ref())
+	}
 }
 
 pub type Monsters = HashMap<String, Monster>;
