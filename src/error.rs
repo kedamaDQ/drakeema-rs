@@ -22,8 +22,9 @@ pub enum Error {
 		String,
 	),
 
-	#[error(display = "Unknown monster id: {}", _0)]
+	#[error(display = "Unknown monster ID: file: {}, id: {}", _0, _1)]
 	UnknownMonsterIdError(
+		String,
 		String,
 	),
 
