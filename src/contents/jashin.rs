@@ -120,6 +120,7 @@ impl<'a> Jashin<'a> {
 			elapsed_months as usize % titles.len()
 		};
 
+		// Safe unwrapping because constructer load() guarantees  titles is not empty.
 		titles.get(elapsed_months).unwrap()
 	}
 
@@ -131,6 +132,7 @@ impl<'a> Jashin<'a> {
 				(at.day() == table.start_day && at.time() >= self.reference_date.time())
 			})
 			.unwrap_or(
+				// Safe unwrapping because constructer load() guarantees  tables is not empty.
 				&self.tables.last().unwrap()
 			)
 	}
