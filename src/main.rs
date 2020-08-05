@@ -39,7 +39,6 @@ fn main()  {
     let monsters = monsters::load().unwrap();
     let jashin = contents::Jashin::load(&monsters).unwrap();
     println!("{:#?}", jashin);
-    println!("{}", jashin.information(chrono::Local::now()));
     println!("{}", jashin.announcement(chrono::Local::now()));
     println!("{}", jashin.announcement(chrono::Local.ymd(2020, 8, 10).and_hms(5, 59, 0)));
     println!("{}", jashin.announcement(chrono::Local.ymd(2020, 8, 10).and_hms(6, 0, 0)));

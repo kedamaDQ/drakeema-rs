@@ -8,6 +8,7 @@ use crate::{
 	monsters::{ Monster, Monsters },
 	utils::transform_string_to_regex,
 };
+use super::{ Announcement, Information };
 
 const DATA: &str = "data/contents/seishugosha.json";
 
@@ -47,41 +48,6 @@ impl<'a> Seishugosha<'a> {
 		})
 	}
 
-	pub fn announcement(&self, at: DateTime<Local>) -> String {
-		let parts = self.monsters.iter()
-			.map(|m| {
-				self.announcement.parts.clone()
-					.replace("__NAME__", m.monster.display())
-					.replace("__LEVEL__", self.level_name(at, m.offset))
-			})
-			.collect::<Vec<String>>()
-			.join("\n");
-
-		self.announcement.start.clone() + &parts + &self.announcement.end
-	}
-
-	pub fn information(&self, text: &str, at: DateTime<Local>) -> Option<String> {
-		if self.is_match(text) {
-			return Some(self.announcement(Local::now()));
-		}
-
-		let informations = self.monsters.iter()
-			.filter(|m| m.is_match(text))
-			.map(|m| {
-				self.information.clone()
-					.replace("__NAME__", m.official_name())
-					.replace("__LEVEL__", self.level_name(at, m.offset))
-					.replace("__RESISTANCES__", m.resistances().display(None::<Vec<String>>).as_str())
-			})
-			.collect::<Vec<String>>();
-		
-		if informations.is_empty() {
-			None
-		} else {
-			Some(informations.join("\n"))
-		}
-	}
-
 	fn is_match(&self, text: impl AsRef<str>) -> bool {
 		self.nickname_regex.is_match(text.as_ref())
 	}
@@ -101,6 +67,45 @@ impl<'a> Seishugosha<'a> {
 			(at - self.reference_date + Duration::nanoseconds(1)).num_days() - 1
 		} else {
 			(at - self.reference_date).num_days()
+		}
+	}
+}
+
+impl<'a> Announcement for Seishugosha<'a> {
+	fn announcement(&self, at: DateTime<Local>) -> String {
+		let parts = self.monsters.iter()
+			.map(|m| {
+				self.announcement.parts.clone()
+					.replace("__NAME__", m.monster.display())
+					.replace("__LEVEL__", self.level_name(at, m.offset))
+			})
+			.collect::<Vec<String>>()
+			.join("\n");
+
+		self.announcement.start.clone() + &parts + &self.announcement.end
+	}
+}
+
+impl<'a> Information for Seishugosha<'a> {
+	fn information(&self, at: DateTime<Local>, text: impl AsRef<str>) -> Option<String> {
+		if self.is_match(text.as_ref()) {
+			return Some(self.announcement(Local::now()));
+		}
+
+		let informations = self.monsters.iter()
+			.filter(|m| m.is_match(text.as_ref()))
+			.map(|m| {
+				self.information.clone()
+					.replace("__NAME__", m.official_name())
+					.replace("__LEVEL__", self.level_name(at, m.offset))
+					.replace("__RESISTANCES__", m.resistances().display(None::<Vec<String>>).as_str())
+			})
+			.collect::<Vec<String>>();
+		
+		if informations.is_empty() {
+			None
+		} else {
+			Some(informations.join("\n"))
 		}
 	}
 }
