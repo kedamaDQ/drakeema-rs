@@ -4,10 +4,12 @@ use chrono::{ Datelike, DateTime, Duration, Local };
 use serde::Deserialize;
 use crate::{
 	Error,
+	Result,
 	monsters::{ Monster, Monsters },
 	resistances::Resistances,
-	Result,
+	utils::transform_string_to_regex,
 };
+use super::{ Announcement, Information };
 
 const DATA: &str = "data/contents/jashin.json";
 
@@ -101,15 +103,6 @@ impl<'a> Jashin<'a> {
 		}
 	}
 
-	pub fn information(&self, at: DateTime<Local>) -> String {
-		let title = self.title(at);
-		self.information
-			.replace("__TITLE__", title.display_title())
-			.replace("__MONSTERS__", title.display_monsters().as_str())
-			.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str()
-			)
-	}
-
 	fn title(&self, at: DateTime<Local>) -> &Title {
 		let titles = &self.table(at).titles;
 		let elapsed_months = self.elapsed_months(at);
@@ -157,6 +150,48 @@ impl<'a> Jashin<'a> {
 		);
 
 		elapsed_months
+	}
+}
+
+impl<'a> Announcement for Jashin<'a> {
+	fn announcement(&self, at: DateTime<Local>) -> String {
+		use std::ops::Add;
+
+		let title_today = self.title(at);
+		let title_tomorrow = self.title(at.add(Duration::hours(24)));
+		let title_yesterday = self.title(at.add(Duration::hours(-24)));
+
+		if title_today != title_yesterday {
+			// Date is start date of the period
+			self.announcement_at_start
+				.replace("__TITLE__", title_today.display_title())
+				.replace("__MONSTERS__", title_today.display_monsters().as_str())
+				.replace("__RESISTANCES__", title_today.display_resistances(Some(&self.area_names)).as_str())
+		} else if title_today != title_tomorrow {
+			// Date is end date of period
+			self.announcement_at_end
+				.replace("__TITLE1__", title_today.display_title())
+				.replace("__TITLE2__", title_tomorrow.display_title())
+		} else {
+			// Date is duaring the period
+			self.announcement
+				.replace("__TITLE__", title_today.display_title())
+		}
+	}
+}
+
+impl<'a> Information for Jashin<'a> {
+	fn information(&self, at: DateTime<Local>, text: impl AsRef<str>) -> Option<String> {
+		if self.nickname_regex.is_match(text.as_ref()) {
+			let title = self.title(at);
+			Some(self.information
+    			.replace("__TITLE__", title.display_title())
+    			.replace("__MONSTERS__", title.display_monsters().as_str())
+    			.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str())
+			)
+		} else {
+			None
+		}
 	}
 }
 
@@ -243,6 +278,9 @@ pub struct JashinJson {
 	announcement_at_start: String,
 	announcement_at_end: String,
 	information: String,
+
+	#[serde(deserialize_with = "transform_string_to_regex")]
+	nickname_regex: regex::Regex,
 	tables: Vec<TableJson>,
 }
 
@@ -401,6 +439,7 @@ mod tests {
         	"announcement_at_start": "邪神の宮殿は本日から __TITLE__ です！相手は __MONSTERS__、あると良い耐性は __RESISTANCES__ です！",
 			"announcement_at_end": "本日の邪神の宮殿は __TITLE1__ です！明日からは __TITLE2__ が始まります！",
         	"information": "本日の邪神の宮殿は __TITLE__ です！相手は__MONSTERS__、あると良い耐性は __RESISTANCES__ です！",
+			"nickname_regex": "(?:邪神|じゃしん|ジャシン|ｼﾞｬｼﾝ)",
         	"tables": [
         		{
         			"start_day": 10,
