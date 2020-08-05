@@ -17,13 +17,15 @@ pub enum Error {
 		std::io::Error,
 	),
 
-	#[error(display = "Data not presented: {}", _0)]
+	#[error(display = "Data not presented: file: {}, data: {}", _0, _1)]
 	DataNotPresentError(
+		&'static str,
 		String,
 	),
 
-	#[error(display = "Unknown monster id: {}", _0)]
+	#[error(display = "Unknown monster ID: file: {}, id: {}", _0, _1)]
 	UnknownMonsterIdError(
+		&'static str,
 		String,
 	),
 

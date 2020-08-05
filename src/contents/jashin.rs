@@ -4,7 +4,7 @@ use chrono::{ Datelike, DateTime, Duration, Local };
 use serde::Deserialize;
 use crate::{
 	Error,
-	monsters::Monsters,
+	monsters::{ Monster, Monsters },
 	resistances::Resistances,
 	Result,
 };
@@ -12,12 +12,12 @@ use crate::{
 const DATA: &str = "data/contents/jashin.json";
 
 #[derive(Debug, Clone)]
-pub struct Jashin<'a, T> {
-	monsters: &'a Monsters,
-	inner: Box<T>,
+pub struct Jashin<'a> {
+	tables: Vec<Table<'a>>,
+	inner: JashinJson,
 }
 
-impl<'a> Jashin<'a, JashinJson> {
+impl<'a> Jashin<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
     	let mut inner: JashinJson = match serde_json::from_reader(
     		BufReader::new(File::open(DATA)?)
@@ -30,10 +30,50 @@ impl<'a> Jashin<'a, JashinJson> {
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 
-		Ok(Jashin {
-			monsters,
-			inner: Box::new(inner),
-		})
+		let mut tables: Vec<Table> = Vec::new();
+
+		for table in inner.tables.iter() {
+			let mut titles: Vec<Title> = Vec::new();
+
+			for title in table.titles.iter() {
+				let mut mon: Vec<&'a Monster> = Vec::new();
+
+				for monster_id in title.monster_ids.iter() {
+					match monsters.get(monster_id) {
+						Some(monster) => mon.push(monster),
+						None => return Err(
+							Error::UnknownMonsterIdError(DATA, monster_id.to_owned())
+						)
+					}
+				}
+
+				titles.push(Title {
+					id: title.id.clone(),
+					display: title.display.clone(),
+					monsters: mon,
+				});
+			}
+
+			if titles.is_empty() {
+				return Err(
+					Error::DataNotPresentError(DATA, "element of titles".to_owned())
+				)
+			}
+
+			tables.push(Table {
+				start_day: table.start_day,
+				titles
+			});
+		}
+
+		if tables.is_empty() {
+			Err(Error::DataNotPresentError(DATA, "element of tables".to_owned()))
+		} else {
+    		Ok(Jashin {
+    			tables,
+    			inner,
+    		})
+		}
 	}
 
 	pub fn announcement(&self, at: DateTime<Local>) -> String {
@@ -47,8 +87,8 @@ impl<'a> Jashin<'a, JashinJson> {
 			// Date is start date of the period
 			self.announcement_at_start
 				.replace("__TITLE__", title_today.display_title())
-				.replace("__MONSTERS__", title_today.display_monsters(self.monsters).as_str())
-				.replace("__RESISTANCES__", title_today.display_resistances(self.monsters, Some(&self.area_names)).as_str())
+				.replace("__MONSTERS__", title_today.display_monsters().as_str())
+				.replace("__RESISTANCES__", title_today.display_resistances(Some(&self.area_names)).as_str())
 		} else if title_today != title_tomorrow {
 			// Date is end date of period
 			self.announcement_at_end
@@ -65,26 +105,13 @@ impl<'a> Jashin<'a, JashinJson> {
 		let title = self.title(at);
 		self.information
 			.replace("__TITLE__", title.display_title())
-			.replace(
-				"__MONSTERS__",
-				title.display_monsters(&self.monsters).as_str()
+			.replace("__MONSTERS__", title.display_monsters().as_str())
+			.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str()
 			)
-			.replace(
-				"__RESISTANCES__",
-				title.display_resistances(&self.monsters, Some(&self.area_names)).as_str()
-			)
-	}
-
-	fn tables(&self) -> &Vec<Table> {
-		&self.tables
 	}
 
 	fn title(&self, at: DateTime<Local>) -> &Title {
 		let titles = &self.table(at).titles;
-		if titles.is_empty() {
-			panic!("Jashin titles is empty");
-		}
-
 		let elapsed_months = self.elapsed_months(at);
 		let elapsed_months = if elapsed_months < 0i32 {
 			let len = titles.len() as i32;
@@ -93,18 +120,20 @@ impl<'a> Jashin<'a, JashinJson> {
 			elapsed_months as usize % titles.len()
 		};
 
+		// Safe unwrapping because constructer load() guarantees  titles is not empty.
 		titles.get(elapsed_months).unwrap()
 	}
 
 	fn table(&self, at: DateTime<Local>) -> &Table {
-		self.tables().iter()
+		self.tables.iter()
 			.rev()
 			.find(|table| {
 				at.day() > table.start_day ||
 				(at.day() == table.start_day && at.time() >= self.reference_date.time())
 			})
 			.unwrap_or(
-				&self.tables().last().expect("No Jashin table found")
+				// Safe unwrapping because constructer load() guarantees  tables is not empty.
+				&self.tables.last().unwrap()
 			)
 	}
 
@@ -131,11 +160,78 @@ impl<'a> Jashin<'a, JashinJson> {
 	}
 }
 
-impl<'a, T> std::ops::Deref for Jashin<'a, T> {
-	type Target = T;
+impl<'a> std::ops::Deref for Jashin<'a> {
+	type Target = JashinJson;
 
 	fn deref(&self) -> &Self::Target {
 		&self.inner
+	}
+}
+
+#[derive(Debug, Clone)]
+struct Table<'a> {
+	start_day: u32,
+	titles: Vec<Title<'a>>,
+}
+
+#[derive(Debug, Clone)]
+struct Title<'a> {
+	id: String,
+	display: String,
+	monsters: Vec<&'a Monster>,
+}
+
+impl<'a> Title<'a> {
+	fn display_title(&self) -> &str {
+		self.display.as_str()
+	}
+
+	fn display_monsters(&self) -> String {
+		self.monsters.iter()
+			.map(|m| m.display())
+			.collect::<Vec<&str>>()
+			.join("と")
+	}
+
+	fn display_resistances<T, U>(&self, area_names: Option<T>) -> String
+	where
+		T: AsRef<[U]>,
+		U: AsRef<str>
+	{
+		self.monsters.iter()
+			.map(|m| m.resistances())
+			.fold(Resistances::new(), |acc, r| acc.join(r))
+			.display(area_names)
+	}
+}
+
+use std::cmp;
+
+impl<'a> cmp::PartialEq for Title<'a> {
+	fn eq(&self, other: &Self) -> bool {
+		self.id == other.id
+	}
+}
+
+impl<'a> cmp::PartialOrd for Title<'a> {
+	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+		Some(self.cmp(other))
+	}
+}
+
+impl<'a> cmp::Eq for Title<'a> {}
+
+impl<'a> cmp::Ord for Title<'a> {
+	fn cmp(&self, other: &Self) -> cmp::Ordering {
+		self.id.cmp(&other.id)
+	}
+}
+
+use std::hash;
+
+impl hash::Hash for TitleJson {
+	fn hash<H: hash::Hasher>(&self, state: &mut H) {
+		self.id.hash(state);
 	}
 }
 
@@ -147,84 +243,22 @@ pub struct JashinJson {
 	announcement_at_start: String,
 	announcement_at_end: String,
 	information: String,
-	tables: Vec<Table>,
+	tables: Vec<TableJson>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct Table {
+struct TableJson {
 	start_day: u32,
-	titles: Vec<Title>,
+	titles: Vec<TitleJson>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct Title {
+struct TitleJson {
 	id: String,
 	display: String,
 	monster_ids: Vec<String>,
 }
 
-impl Title {
-	fn display_title(&self) -> &str {
-		self.display.as_str()
-	}
-
-	fn display_monsters(&self, monsters: &Monsters) -> String {
-		self.monster_ids.iter()
-			.map(|id| monsters
-				.get(id)
-				.expect("Unknown monster ID")
-				.display()
-				.to_owned()
-			)
-			.collect::<Vec<String>>()
-			.join("と")
-	}
-
-	fn display_resistances<T, U>(&self, monsters: &Monsters, area_names: Option<T>) -> String
-	where
-		T: AsRef<[U]>,
-		U: AsRef<str>,
-	{
-		self.monster_ids.iter()
-			.map(|id| monsters
-				.get(id)
-				.expect("Unknown monster ID")
-				.resistances()
-			)
-			.fold(Resistances::new(), |acc, r| acc.join(r))
-			.display(area_names)
-	}
-}
-
-use std::cmp;
-
-impl cmp::PartialEq for Title {
-	fn eq(&self, other: &Self) -> bool {
-		self.id == other.id
-	}
-}
-
-impl cmp::PartialOrd for Title {
-	fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-		Some(self.cmp(other))
-	}
-}
-
-impl cmp::Eq for Title {}
-
-impl cmp::Ord for Title {
-	fn cmp(&self, other: &Self) -> cmp::Ordering {
-		self.id.cmp(&other.id)
-	}
-}
-
-use std::hash;
-
-impl hash::Hash for Title {
-	fn hash<H: hash::Hasher>(&self, state: &mut H) {
-		self.id.hash(state);
-	}
-}
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -325,11 +359,37 @@ mod tests {
 		);
 	}
 
-	fn data(monsters: &Monsters) -> Jashin<JashinJson> {
-		let inner = serde_json::from_str(TEST_DATA).unwrap();
+	fn data<'a>(monsters: &'a Monsters) -> Jashin {
+		let mut inner: JashinJson = serde_json::from_str(TEST_DATA).unwrap();
+		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
+
+		let mut tables: Vec<Table> = Vec::new();
+
+		for table in inner.tables.iter() {
+			let mut titles: Vec<Title> = Vec::new();
+
+			for title in table.titles.iter() {
+				let mut mon: Vec<&'a Monster> = Vec::new();
+
+				for monster_id in title.monster_ids.iter() {
+					mon.push(monsters.get(monster_id).unwrap());
+				}
+
+				titles.push(Title {
+					id: title.id.clone(),
+					display: title.display.clone(),
+					monsters: mon,
+				});
+			}
+			tables.push(Table {
+				start_day: table.start_day,
+				titles
+			});
+		}
+
 		Jashin {
-			monsters,
-			inner: Box::new(inner),
+			tables,
+			inner,
 		}
 	}
 
