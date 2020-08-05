@@ -15,7 +15,7 @@ const DATA: &str = "data/contents/jashin.json";
 
 #[derive(Debug, Clone)]
 pub struct Jashin<'a> {
-	tables: Vec<Table<'a>>,
+	tables: Tables<'a>,
 	inner: JashinJson,
 }
 
@@ -32,124 +32,14 @@ impl<'a> Jashin<'a> {
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 
-		let mut tables: Vec<Table> = Vec::new();
-
-		for table in inner.tables.iter() {
-			let mut titles: Vec<Title> = Vec::new();
-
-			for title in table.titles.iter() {
-				let mut mon: Vec<&'a Monster> = Vec::new();
-
-				for monster_id in title.monster_ids.iter() {
-					match monsters.get(monster_id) {
-						Some(monster) => mon.push(monster),
-						None => return Err(
-							Error::UnknownMonsterIdError(DATA, monster_id.to_owned())
-						)
-					}
-				}
-
-				titles.push(Title {
-					id: title.id.clone(),
-					display: title.display.clone(),
-					monsters: mon,
-				});
-			}
-
-			if titles.is_empty() {
-				return Err(
-					Error::DataNotPresentError(DATA, "element of titles".to_owned())
-				)
-			}
-
-			tables.push(Table {
-				start_day: table.start_day,
-				titles
-			});
-		}
-
-		if tables.is_empty() {
-			Err(Error::DataNotPresentError(DATA, "element of tables".to_owned()))
-		} else {
-    		Ok(Jashin {
-    			tables,
-    			inner,
-    		})
-		}
-	}
-
-	pub fn announcement(&self, at: DateTime<Local>) -> String {
-		use std::ops::Add;
-
-		let title_today = self.title(at);
-		let title_tomorrow = self.title(at.add(Duration::hours(24)));
-		let title_yesterday = self.title(at.add(Duration::hours(-24)));
-
-		if title_today != title_yesterday {
-			// Date is start date of the period
-			self.announcement_at_start
-				.replace("__TITLE__", title_today.display_title())
-				.replace("__MONSTERS__", title_today.display_monsters().as_str())
-				.replace("__RESISTANCES__", title_today.display_resistances(Some(&self.area_names)).as_str())
-		} else if title_today != title_tomorrow {
-			// Date is end date of period
-			self.announcement_at_end
-				.replace("__TITLE1__", title_today.display_title())
-				.replace("__TITLE2__", title_tomorrow.display_title())
-		} else {
-			// Date is duaring the period
-			self.announcement
-				.replace("__TITLE__", title_today.display_title())
-		}
+		Ok(Jashin {
+			tables: Tables::new(&inner.tables, monsters, inner.reference_date)?,
+			inner,
+		})
 	}
 
 	fn title(&self, at: DateTime<Local>) -> &Title {
-		let titles = &self.table(at).titles;
-		let elapsed_months = self.elapsed_months(at);
-		let elapsed_months = if elapsed_months < 0i32 {
-			let len = titles.len() as i32;
-			(len + elapsed_months % len).abs() as usize
-		} else {
-			elapsed_months as usize % titles.len()
-		};
-
-		// Safe unwrapping because constructer load() guarantees  titles is not empty.
-		titles.get(elapsed_months).unwrap()
-	}
-
-	fn table(&self, at: DateTime<Local>) -> &Table {
-		self.tables.iter()
-			.rev()
-			.find(|table| {
-				at.day() > table.start_day ||
-				(at.day() == table.start_day && at.time() >= self.reference_date.time())
-			})
-			.unwrap_or(
-				// Safe unwrapping because constructer load() guarantees  tables is not empty.
-				&self.tables.last().unwrap()
-			)
-	}
-
-	fn elapsed_months(&self, at: DateTime<Local>) -> i32 {
-		let mut elapsed_months =
-			(at.year() - self.reference_date.year()) * 12 +
-			(at.month() as i32 - self.reference_date.month() as i32);
-
-		if at.day() < self.reference_date.day() || (
-			at.day() == self.reference_date.day() &&
-			at.time() < self.reference_date.time()
-		) {
-			elapsed_months -= 1;
-		}
-
-		debug!(
-			"Number of months elapsed from {} to {} is {}",
-			self.reference_date,
-			at,
-			elapsed_months
-		);
-
-		elapsed_months
+		self.tables.table(at).titles.title(at)
 	}
 }
 
@@ -204,9 +94,150 @@ impl<'a> std::ops::Deref for Jashin<'a> {
 }
 
 #[derive(Debug, Clone)]
+struct Tables<'a> {
+	reference_date: DateTime<Local>,
+	inner: Vec<Table<'a>>,
+}
+
+impl<'a> Tables<'a> {
+	fn new(
+		tables: impl AsRef<[TableJson]>,
+		monsters: &'a Monsters,
+		reference_date: DateTime<Local>) -> Result<Self> {
+		let mut inner: Vec<Table> = Vec::new();
+
+		for table in tables.as_ref() {
+			inner.push(Table {
+				start_day: table.start_day,
+				titles: Titles::new(&table.titles, monsters, reference_date)?
+			})
+		}
+
+		if inner.is_empty() {
+			Err(Error::DataNotPresentError(DATA, "element of tables".to_owned()))
+		} else {
+			Ok(Tables {
+				reference_date,
+				inner
+			})
+		}
+	}
+
+	fn table(&self, at: DateTime<Local>) -> &Table {
+		self.iter()
+			.rev()
+			.find(|table| {
+				at.day() > table.start_day ||
+				(at.day() == table.start_day && at.time() >= self.reference_date.time())
+			})
+			.unwrap_or(
+				// Safe unwrapping because constructer new() guarantees inner is not empty.
+				&self.last().unwrap()
+			)
+	}
+}
+
+impl<'a> std::ops::Deref for Tables<'a> {
+	type Target = Vec<Table<'a>>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.inner
+	}
+}
+
+#[derive(Debug, Clone)]
 struct Table<'a> {
 	start_day: u32,
-	titles: Vec<Title<'a>>,
+	titles: Titles<'a>
+}
+
+#[derive(Debug, Clone)]
+struct Titles<'a> {
+	reference_date: DateTime<Local>,
+	inner: Vec<Title<'a>>,
+}
+
+impl<'a> Titles<'a> {
+	fn new(
+		titles: impl AsRef<[TitleJson]>,
+		monsters: &'a Monsters,
+		reference_date: DateTime<Local>
+	) -> Result<Self> {
+		let mut inner: Vec<Title<'a>> = Vec::new();
+
+		for title in titles.as_ref() {
+			let mut mon: Vec<&'a Monster> = Vec::new();
+
+			for monster_id in title.monster_ids.iter() {
+				match monsters.get(monster_id) {
+					Some(monster) => mon.push(monster),
+					None => return Err(
+						Error::UnknownMonsterIdError(DATA, monster_id.to_owned())
+					)
+				}
+			}
+
+			inner.push(Title {
+				id: title.id.clone(),
+				display: title.display.clone(),
+				monsters: mon,
+			});
+		}
+
+		if inner.is_empty() {
+			Err(
+				Error::DataNotPresentError(DATA, "element of titles".to_owned())
+			)
+		} else {
+			Ok(Titles {
+				reference_date,
+				inner,
+			})
+		}
+	}
+
+	fn title(&self, at: DateTime<Local>) -> &Title {
+		let elapsed_months = self.elapsed_months(at);
+		let elapsed_months = if elapsed_months < 0i32 {
+			let len = self.len() as i32;
+			(len + elapsed_months % len).abs() as usize
+		} else {
+			elapsed_months as usize % self.len()
+		};
+
+		// Safe unwrapping because constructer new() guarantees inner is not empty.
+		self.get(elapsed_months).unwrap()
+	}
+
+	fn elapsed_months(&self, at: DateTime<Local>) -> i32 {
+		let mut elapsed_months =
+			(at.year() - self.reference_date.year()) * 12 +
+			(at.month() as i32 - self.reference_date.month() as i32);
+
+		if at.day() < self.reference_date.day() || (
+			at.day() == self.reference_date.day() &&
+			at.time() < self.reference_date.time()
+		) {
+			elapsed_months -= 1;
+		}
+
+		debug!(
+			"Number of months elapsed from {} to {} is {}",
+			self.reference_date,
+			at,
+			elapsed_months
+		);
+
+		elapsed_months
+	}
+}
+
+impl<'a> std::ops::Deref for Titles<'a> {
+	type Target = Vec<Title<'a>>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.inner
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -264,7 +295,7 @@ impl<'a> cmp::Ord for Title<'a> {
 
 use std::hash;
 
-impl hash::Hash for TitleJson {
+impl<'a> hash::Hash for Title<'a> {
 	fn hash<H: hash::Hasher>(&self, state: &mut H) {
 		self.id.hash(state);
 	}
@@ -397,36 +428,13 @@ mod tests {
 		);
 	}
 
-	fn data<'a>(monsters: &'a Monsters) -> Jashin {
+	fn data(monsters: &Monsters) -> Jashin {
 		let mut inner: JashinJson = serde_json::from_str(TEST_DATA).unwrap();
+
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 
-		let mut tables: Vec<Table> = Vec::new();
-
-		for table in inner.tables.iter() {
-			let mut titles: Vec<Title> = Vec::new();
-
-			for title in table.titles.iter() {
-				let mut mon: Vec<&'a Monster> = Vec::new();
-
-				for monster_id in title.monster_ids.iter() {
-					mon.push(monsters.get(monster_id).unwrap());
-				}
-
-				titles.push(Title {
-					id: title.id.clone(),
-					display: title.display.clone(),
-					monsters: mon,
-				});
-			}
-			tables.push(Table {
-				start_day: table.start_day,
-				titles
-			});
-		}
-
 		Jashin {
-			tables,
+			tables: Tables::new(&inner.tables, monsters, inner.reference_date).unwrap(),
 			inner,
 		}
 	}
