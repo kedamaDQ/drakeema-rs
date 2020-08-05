@@ -28,7 +28,7 @@ impl<'a> Seishugosha<'a> {
 		};
 
 		let mut monsters_vec: Vec<SeishugoshaMonster> = Vec::new();
-		for monster in inner.seishugosha_monsters.iter() {
+		for monster in inner.monsters.iter() {
 			match monsters.get(&monster.monster_id) {
 				Some(m) => monsters_vec.push(SeishugoshaMonster {
 					monster: &m,
@@ -36,7 +36,7 @@ impl<'a> Seishugosha<'a> {
 					offset: monster.offset,
 				}),
 				None => return Err(
-					Error::UnknownMonsterIdError(DATA.to_owned(), monster.monster_id.clone())
+					Error::UnknownMonsterIdError(DATA, monster.monster_id.clone())
 				),
 			}
 		}
@@ -126,6 +126,7 @@ impl<'a> std::ops::Deref for SeishugoshaMonster<'a> {
 		&self.monster
 	}
 }
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct SeishugoshaJson {
 	reference_date: DateTime<Local>,
@@ -134,7 +135,7 @@ pub struct SeishugoshaJson {
 	information: String,
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	nickname_regex: regex::Regex,
-	seishugosha_monsters: Vec<SeishugoshaMonsterJson>,
+	monsters: Vec<SeishugoshaMonsterJson>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -230,7 +231,7 @@ mod tests {
 	fn load(monsters: &Monsters) -> Seishugosha {
 		let inner: SeishugoshaJson = serde_json::from_str(TEST_DATA).unwrap();
 		let mut monsters_vec: Vec<SeishugoshaMonster> = Vec::new();
-		for monster in inner.seishugosha_monsters.iter() {
+		for monster in inner.monsters.iter() {
 			monsters_vec.push(SeishugoshaMonster {
 				id: monster.id.clone(),
 				offset: monster.offset,
@@ -256,7 +257,7 @@ mod tests {
             },
             "information": "本日の __NAME__ は __LEVEL__ です！あると良い耐性は __RESISTANCES__ です！",
             "nickname_regex": "(?:聖?守護者|(?:せい)?しゅごしゃ|(?:セイ)?シュゴシャ|(?:ｾｲ)?ｼｭｺﾞｼｬ|闘戦記|とうせんき|トウセンキ|ﾄｳｾﾝｷ)",
-            "seishugosha_monsters": [
+            "monsters": [
                 {
                     "id": "regrog",
                     "monster_id": "seishugosha_regrog",

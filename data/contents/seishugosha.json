@@ -8,7 +8,7 @@
     },
     "information": "本日の __NAME__ は __LEVEL__ です！あると良い耐性は __RESISTANCES__ です！",
     "nickname_regex": "(?:聖?守護者|(?:せい)?しゅごしゃ|(?:セイ)?シュゴシャ|(?:ｾｲ)?ｼｭｺﾞｼｬ|闘戦記|とうせんき|トウセンキ|ﾄｳｾﾝｷ)",
-    "seishugosha_monsters": [
+    "monsters": [
         {
             "id": "regrog",
             "monster_id": "seishugosha_regrog",
