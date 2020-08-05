@@ -13,7 +13,7 @@ use super::{ Announcement, Information };
 const DATA: &str = "data/contents/seishugosha.json";
 
 pub struct Seishugosha<'a> {
-	monsters: Vec<SeishugoshaMonster<'a>>,
+	monsters: SeishugoshaMonsters<'a>,
 	inner: SeishugoshaJson,
 }
 
@@ -28,22 +28,8 @@ impl<'a> Seishugosha<'a> {
 			),
 		};
 
-		let mut monsters_vec: Vec<SeishugoshaMonster> = Vec::new();
-		for monster in inner.monsters.iter() {
-			match monsters.get(&monster.monster_id) {
-				Some(m) => monsters_vec.push(SeishugoshaMonster {
-					monster: &m,
-					id: monster.id.to_owned(),
-					offset: monster.offset,
-				}),
-				None => return Err(
-					Error::UnknownMonsterIdError(DATA, monster.monster_id.clone())
-				),
-			}
-		}
-
 		Ok(Seishugosha {
-			monsters: monsters_vec,
+			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters)?,
 			inner,
 		})
 	}
@@ -118,7 +104,41 @@ impl<'a> std::ops::Deref for Seishugosha<'a> {
 	}
 }
 
+struct SeishugoshaMonsters<'a> {
+	inner: Vec<SeishugoshaMonster<'a>>,
+}
+
+impl<'a> SeishugoshaMonsters<'a> {
+	fn new(s_monsters: impl AsRef<[MonsterJson]>, monsters: &'a Monsters) -> Result<Self> {
+		let mut inner: Vec<SeishugoshaMonster<'a>> = Vec::new();
+		for monster in s_monsters.as_ref() {
+			match monsters.get(&monster.monster_id) {
+				Some(m) => inner.push(SeishugoshaMonster {
+					id: monster.id.to_owned(),
+					monster: &m,
+					offset: monster.offset,
+				}),
+				None => return Err(
+					Error::UnknownMonsterIdError(DATA, monster.monster_id.clone())
+				),
+			}
+		}
+
+		Ok(SeishugoshaMonsters {
+			inner,
+		})
+	}
+}
+
+impl<'a> std::ops::Deref for SeishugoshaMonsters<'a> {
+	type Target = Vec<SeishugoshaMonster<'a>>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.inner
+	}
+}
 struct SeishugoshaMonster<'a> {
+	#[allow(unused)]
 	id: String,
 	monster: &'a Monster,
 	offset: i64,
@@ -140,7 +160,7 @@ pub struct SeishugoshaJson {
 	information: String,
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	nickname_regex: regex::Regex,
-	monsters: Vec<SeishugoshaMonsterJson>,
+	monsters: Vec<MonsterJson>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -151,7 +171,7 @@ struct AnnouncementJson {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct SeishugoshaMonsterJson {
+struct MonsterJson {
 	id: String,
 	monster_id: String,
 	offset: i64,
@@ -235,17 +255,8 @@ mod tests {
 
 	fn load(monsters: &Monsters) -> Seishugosha {
 		let inner: SeishugoshaJson = serde_json::from_str(TEST_DATA).unwrap();
-		let mut monsters_vec: Vec<SeishugoshaMonster> = Vec::new();
-		for monster in inner.monsters.iter() {
-			monsters_vec.push(SeishugoshaMonster {
-				id: monster.id.clone(),
-				offset: monster.offset,
-				monster: monsters.get(&monster.monster_id).unwrap(),
-			});
-		}
-
 		Seishugosha {
-			monsters: monsters_vec,
+			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters).unwrap(),
 			inner,
 		}
 	}
