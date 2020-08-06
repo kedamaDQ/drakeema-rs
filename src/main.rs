@@ -1,6 +1,16 @@
 #[macro_use]
 extern crate log;
 
+mod contents;
+mod emojis;
+mod error;
+mod listeners;
+mod monsters;
+mod resistances;
+mod utils;
+
+pub use error::{ Error, Result };
+
 use std::process;
 use std::sync::Arc;
 use std::thread;
@@ -9,15 +19,6 @@ use mastors::api::{
     v1::accounts,
     v1::streaming,
 };
-
-mod contents;
-mod error;
-mod listeners;
-mod monsters;
-mod resistances;
-mod utils;
-
-pub use error::{ Error, Result };
 use contents::{ Announcement, Information };
 
 //const ENV: &str = ".env.test";
