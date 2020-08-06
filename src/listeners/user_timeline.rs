@@ -1,3 +1,4 @@
+use std::sync::mpsc::Sender;
 use mastors::prelude::*;
 use mastors::api::v1::accounts::id::{
 	follow,
@@ -8,13 +9,15 @@ use regex::Regex;
 pub struct UserTimelineListener<'a> {
 	conn: &'a Connection,
 	me: &'a Account, 
+	tx: &'a Sender<Status>,
 }
 
 impl<'a> UserTimelineListener<'a> {
-	pub fn new(conn: &'a Connection, me: &'a Account) -> Self {
+	pub fn new(conn: &'a Connection, me: &'a Account, tx: &'a Sender<Status>) -> Self {
 		UserTimelineListener {
 			conn,
 			me,
+			tx,
 		}
 	}
 }
@@ -23,7 +26,7 @@ const REGEX_FOLLOW_REQUEST: &str = r#"(?:フォロー|ふぉろー|follow)\s*し
 const REGEX_UNFOLLOW_REQUEST: &str = r#"(?:フォロー|ふぉろー|follow)\s*(?:やめて|はずして|外して)"#;
 
 impl<'a> EventListener for UserTimelineListener<'a> {
-	type Error = mastors::Error;
+	type Error = crate::Error;
 
 	fn update(&self, status: &Status) -> Result<(), Self::Error> {
 		if status.account() == self.me {
@@ -35,9 +38,7 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 			info!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
-
-//		
-		Ok(())
+		self.tx.send(status.clone()).map_err(crate::Error::SendStatusMessageError)
 	}
 
 	fn notification(&self, notification: &Notification) -> Result<(), Self::Error> {

@@ -3,7 +3,7 @@
     "level_names": ["Ⅰ", "Ⅱ", "Ⅲ"],
     "announcement": {
         "start": "本日の 聖守護者の闘戦記 は……\n",
-        "parts": "__NAME__：__LEVEL__",
+        "parts": "__EMOJI__ __NAME__：__LEVEL__",
         "end": "\n……です！"
     },
     "information": "本日の __NAME__ は __LEVEL__ です！あると良い耐性は __RESISTANCES__ です！",

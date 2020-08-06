@@ -9,7 +9,12 @@ use crate::{
 	resistances::Resistances,
 	utils::transform_string_to_regex,
 };
-use super::{ Announcement, Information };
+use super::{
+	Announcement,
+	AnnouncementCriteria,
+	Information,
+	InformationCriteria,
+};
 
 const DATA: &str = "data/contents/jashin.json";
 
@@ -44,12 +49,12 @@ impl<'a> Jashin<'a> {
 }
 
 impl<'a> Announcement for Jashin<'a> {
-	fn announcement(&self, at: DateTime<Local>) -> String {
+	fn announcement(&self, criteria: AnnouncementCriteria) -> String {
 		use std::ops::Add;
 
-		let title_today = self.title(at);
-		let title_tomorrow = self.title(at.add(Duration::hours(24)));
-		let title_yesterday = self.title(at.add(Duration::hours(-24)));
+		let title_today = self.title(criteria.at);
+		let title_tomorrow = self.title(criteria.at.add(Duration::hours(24)));
+		let title_yesterday = self.title(criteria.at.add(Duration::hours(-24)));
 
 		if title_today != title_yesterday {
 			// Date is start date of the period
@@ -71,9 +76,9 @@ impl<'a> Announcement for Jashin<'a> {
 }
 
 impl<'a> Information for Jashin<'a> {
-	fn information(&self, at: DateTime<Local>, text: impl AsRef<str>) -> Option<String> {
-		if self.nickname_regex.is_match(text.as_ref()) {
-			let title = self.title(at);
+	fn information(&self, criteria: InformationCriteria) -> Option<String> {
+		if self.nickname_regex.is_match(criteria.text.as_str()) {
+			let title = self.title(criteria.at);
 			Some(self.information
     			.replace("__TITLE__", title.display_title())
     			.replace("__MONSTERS__", title.display_monsters().as_str())

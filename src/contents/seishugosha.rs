@@ -8,7 +8,12 @@ use crate::{
 	monsters::{ Monster, Monsters },
 	utils::transform_string_to_regex,
 };
-use super::{ Announcement, Information };
+use super::{
+	Announcement,
+	AnnouncementCriteria,
+	Information,
+	InformationCriteria,
+};
 
 const DATA: &str = "data/contents/seishugosha.json";
 
@@ -58,12 +63,12 @@ impl<'a> Seishugosha<'a> {
 }
 
 impl<'a> Announcement for Seishugosha<'a> {
-	fn announcement(&self, at: DateTime<Local>) -> String {
+	fn announcement(&self, criteria: AnnouncementCriteria) -> String {
 		let parts = self.monsters.iter()
 			.map(|m| {
 				self.announcement.parts.clone()
 					.replace("__NAME__", m.monster.display())
-					.replace("__LEVEL__", self.level_name(at, m.offset))
+					.replace("__LEVEL__", self.level_name(criteria.at, m.offset))
 			})
 			.collect::<Vec<String>>()
 			.join("\n");
@@ -73,17 +78,17 @@ impl<'a> Announcement for Seishugosha<'a> {
 }
 
 impl<'a> Information for Seishugosha<'a> {
-	fn information(&self, at: DateTime<Local>, text: impl AsRef<str>) -> Option<String> {
-		if self.is_match(text.as_ref()) {
-			return Some(self.announcement(Local::now()));
+	fn information(&self, criteria: InformationCriteria) -> Option<String> {
+		if self.is_match(criteria.text.as_str()) {
+			return Some(self.announcement(AnnouncementCriteria { at: criteria.at }));
 		}
 
 		let informations = self.monsters.iter()
-			.filter(|m| m.is_match(text.as_ref()))
+			.filter(|m| m.is_match(criteria.text.as_str()))
 			.map(|m| {
 				self.information.clone()
 					.replace("__NAME__", m.official_name())
-					.replace("__LEVEL__", self.level_name(at, m.offset))
+					.replace("__LEVEL__", self.level_name(criteria.at, m.offset))
 					.replace("__RESISTANCES__", m.resistances().display(None::<Vec<String>>).as_str())
 			})
 			.collect::<Vec<String>>();
@@ -253,7 +258,7 @@ mod tests {
 
 	}
 
-	fn load(monsters: &Monsters) -> Seishugosha {
+	fn load<'a>(monsters: &'a Monsters) -> Seishugosha<'a> {
 		let inner: SeishugoshaJson = serde_json::from_str(TEST_DATA).unwrap();
 		Seishugosha {
 			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters).unwrap(),
