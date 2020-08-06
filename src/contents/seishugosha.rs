@@ -258,7 +258,7 @@ mod tests {
 
 	}
 
-	fn load<'a>(monsters: &'a Monsters) -> Seishugosha<'a> {
+	fn load(monsters: &Monsters) -> Seishugosha {
 		let inner: SeishugoshaJson = serde_json::from_str(TEST_DATA).unwrap();
 		Seishugosha {
 			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters).unwrap(),

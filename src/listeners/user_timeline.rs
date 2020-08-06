@@ -38,7 +38,7 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 			info!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
-		self.tx.send(status.clone()).map_err(crate::Error::SendStatusMessageError)
+		self.tx.send(status.clone()).map_err(|e| crate::Error::SendStatusMessageError(Box::new(e)))
 	}
 
 	fn notification(&self, notification: &Notification) -> Result<(), Self::Error> {
@@ -66,10 +66,6 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 
 fn is_overlapped_at_local_and_home(status: &Status) -> bool {
     status.account().is_local() && status.visibility() == Visibility::Public
-}
-
-fn is_only_at_home(status: &Status) -> bool {
-    !is_overlapped_at_local_and_home(status)
 }
 
 fn is_match(regex: &str, status: Option<&Status>) -> bool {
