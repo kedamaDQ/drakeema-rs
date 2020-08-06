@@ -100,6 +100,7 @@ fn main() {
 
     use std::str::FromStr;
 
+    let mut emojis = emojis::Emojis::load(&conn).unwrap();
     let keemasan = regex::Regex::from_str(KEEMASAN_REGEX).unwrap();
     let oshiete = regex::Regex::from_str(OSHIETE_REGEX).unwrap();
 
@@ -121,7 +122,7 @@ fn main() {
                 break;
             }
 
-            let response = String::from("@") + status.account().acct() + "\n\n" + response.as_str();
+            let response = emojis.emojify(String::from("@") + status.account().acct() + "\n\n" + response.as_str());
 
             let mut post = statuses::post(&conn, response);
             if status.account().is_remote() {

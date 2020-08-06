@@ -7,6 +7,7 @@ use crate::{
 	Result,
 };
 
+const EMOJI_PLACE_HOLDER: &str = "__EMOJI__";
 const CUSTOM_EMOJI_CATEGORIES_REGEX: &str = "^(?:モンスター|キャラクター)$";
 
 pub struct Emojis<'a> {
@@ -42,8 +43,18 @@ impl<'a> Emojis<'a> {
 		if self.inner.is_empty() {
 			String::new()
 		} else {
-			self.inner.remove(self.rand.gen::<usize>() % self.inner.len())
+			let shortcode = self.inner.remove(self.rand.gen::<usize>() % self.inner.len());
+			String::from(":") + shortcode.as_str() + ":"
 		}
+	}
+
+	pub fn emojify(&mut self, text: impl Into<String>) -> String {
+		let mut text = text.into();
+		while text.find(EMOJI_PLACE_HOLDER).is_some() {
+			text = text.replacen(EMOJI_PLACE_HOLDER, self.get().as_str(), 1);
+			println!("{}", text);
+		}
+		text
 	}
 
 	fn refresh(&mut self) {
@@ -59,7 +70,7 @@ impl<'a> Emojis<'a> {
 		}
 	}
 
-	fn build_emojis(re: &regex::Regex, ce: &mastors::entities::Emojis) -> Vec<String> {
+	fn build_emojis(re: &regex::Regex, ce: &[mastors::entities::Emoji]) -> Vec<String> {
 		let emojis = ce.iter()
 			.filter(|ce| ce.category().is_some() && re.is_match(ce.category().unwrap()))
 			.map(|ce| ce.shortcode().to_owned())
