@@ -1,27 +1,28 @@
+use std::sync::mpsc::Sender;
 use mastors::prelude::*;
 
 pub struct LocalTimelineListener<'a> {
-	conn: &'a Connection,
 	me: &'a Account,
+	tx: &'a Sender<Status>,
 }
 
 impl<'a> LocalTimelineListener<'a> {
-	pub fn new(conn: &'a Connection, me: &'a Account) -> Self {
+	pub fn new(me: &'a Account, tx: &'a Sender<Status>) -> Self {
 		LocalTimelineListener {
-			conn,
 			me,
+			tx,
 		}
 	}
 }
 
 impl<'a> EventListener for LocalTimelineListener<'a> {
-	type Error = String;
+	type Error = crate::Error;
 
 	fn update(&self, status: &Status) -> Result<(), Self::Error> {
 		if status.account() == self.me {
 			info!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
 		}
-		Ok(())
+		self.tx.send(status.clone()).map_err(crate::Error::SendStatusMessageError)
 	}
 }
