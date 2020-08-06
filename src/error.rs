@@ -34,4 +34,10 @@ pub enum Error {
 		#[error(source, from)]
 		regex::Error,
 	),
+
+	#[error(display = "Mastors API call error: {}", _0)]
+	MastorsApiError(
+		#[error(source, from)]
+		mastors::Error,
+	)
 }

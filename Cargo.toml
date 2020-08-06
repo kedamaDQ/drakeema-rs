@@ -11,6 +11,7 @@ env_logger = { version = "0.7" }
 err-derive = { version = "0.2" }
 log = { version = "0.4" }
 mastors = { path = "../mastors" }
+rand = { version = "0.7" }
 regex = { version = "1.3" }
 reqwest = { version = "0.10", features = ["json", "gzip", "blocking"] }
 serde = { version = "1.0", features = ["derive"] }
