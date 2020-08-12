@@ -1,17 +1,20 @@
-use std::str::FromStr;
+use std::fs::File;
+use std::io::BufReader;
 use mastors::prelude::*;
 use mastors::api::v1::custom_emojis;
 use rand::Rng;
+use serde::Deserialize;
 use crate::{
 	Error,
 	Result,
+	utils::transform_string_to_regex,
 };
 
-const EMOJI_PLACE_HOLDER: &str = "__EMOJI__";
-const CUSTOM_EMOJI_CATEGORIES_REGEX: &str = "^(?:モンスター|キャラクター)$";
+const DATA: &str = "data/emojis.json";
 
 pub struct Emojis<'a> {
 	conn: &'a Connection,
+	placeholder: String,
 	re: regex::Regex,
 	rand: rand::rngs::ThreadRng,
 	inner: Vec<String>,
@@ -20,16 +23,25 @@ pub struct Emojis<'a> {
 
 impl<'a> Emojis<'a> {
 	pub fn load(conn: &'a Connection) -> Result<Self> {
-		let re = regex::Regex::from_str(CUSTOM_EMOJI_CATEGORIES_REGEX)?;
+		let config: EmojiConfig = match serde_json::from_reader(
+			BufReader::new(File::open(DATA)?)
+		) {
+			Ok(ec) => ec,
+			Err(e) => return Err(
+				Error::ParseJsonError(DATA.to_owned(), e)
+			)
+		};
+
 		custom_emojis::get(conn)
 			.send()
 			.map(|ce| {
 				Emojis {
 					conn,
-					re: re.clone(),
+					placeholder: config.placeholder.clone(),
+					re: config.category_regex.clone(),
 					rand: rand::thread_rng(),
-					inner: Self::build_emojis(&re, &ce),
-					cache: Self::build_emojis(&re, &ce),
+					inner: Self::build_emojis(&config.category_regex, &ce),
+					cache: Self::build_emojis(&config.category_regex, &ce),
 				}
 			})
 			.map_err(Error::MastorsApiError)
@@ -50,8 +62,9 @@ impl<'a> Emojis<'a> {
 
 	pub fn emojify(&mut self, text: impl Into<String>) -> String {
 		let mut text = text.into();
-		while text.find(EMOJI_PLACE_HOLDER).is_some() {
-			text = text.replacen(EMOJI_PLACE_HOLDER, self.get().as_str(), 1);
+		let placeholder = self.placeholder.clone();
+		while text.find(placeholder.as_str()).is_some() {
+			text = text.replacen(placeholder.as_str(), self.get().as_str(), 1);
 			println!("{}", text);
 		}
 		text
@@ -92,6 +105,13 @@ impl<'a> std::ops::Deref for Emojis<'a> {
 	}
 }
 
+#[derive(Debug, Clone, Deserialize)]
+struct EmojiConfig {
+	placeholder: String,
+	#[serde(deserialize_with = "transform_string_to_regex")]
+	category_regex: regex::Regex,
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -99,7 +119,7 @@ mod tests {
 	#[test]
 	fn test_supply_emoji_forever() {
 		let conn = Connection::from_file(".env.test.st").unwrap();
-		let mut emojis = Emojis::load(&conn).unwrap();
+		let mut emojis = data(&conn);
 		let blank = String::new();
 		for _i in 0 .. 500 {
 			assert_ne!(emojis.get(), blank);
@@ -109,7 +129,7 @@ mod tests {
 	#[test]
 	fn test_category_filtering() {
 		let conn = Connection::from_file(".env.test.st").unwrap();
-		let emojis = Emojis::load(&conn).unwrap();
+		let emojis = data(&conn);
 		let emojis_orig = mastors::api::v1::custom_emojis::get(&conn).send().unwrap();
 
 		let monster_emojis = emojis_orig.iter()
@@ -121,4 +141,27 @@ mod tests {
 
 		assert_eq!(monster_emojis.len() + character_emojis.len(), emojis.len());
 	}
+
+	fn data(conn: &Connection) -> Emojis {
+		let config: EmojiConfig = serde_json::from_str(CONFIG).unwrap();
+		custom_emojis::get(conn)
+			.send()
+			.map(|ce| {
+				Emojis {
+					conn,
+					placeholder: config.placeholder.clone(),
+					re: config.category_regex.clone(),
+					rand: rand::thread_rng(),
+					inner: Emojis::build_emojis(&config.category_regex, &ce),
+					cache: Emojis::build_emojis(&config.category_regex, &ce),
+				}
+			})
+			.unwrap()
+
+	}
+
+	const CONFIG: &str = r#"{
+		"placeholder": "__EMOJI__",
+		"category_regex": "^(?:モンスター|キャラクター)$"
+	}"#;
 }
