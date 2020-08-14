@@ -48,10 +48,12 @@ fn main() {
     let monsters = monsters::load().unwrap();
     let jashin = contents::Jashin::load(&monsters).unwrap();
     let seishugosha = contents::Seishugosha::load(&monsters).unwrap();
+    let boueigun = contents::Boueigun::load(&monsters).unwrap();
 
     let informations: Vec<&dyn Information> = vec![
         &jashin,
         &seishugosha,
+        &boueigun,
     ];
 
     let announcements: Vec<&dyn Announcement> = vec![
