@@ -39,7 +39,7 @@ impl<'a> Boueigun<'a> {
 		})
 	}
 
-	fn current_monster(&self, at: DateTime<Local>) -> CurrentMonsterInfo {
+	fn current_status(&self, at: DateTime<Local>) -> CurrentMonsterInfo {
 		let mut ref_date = self.reference_date;
 
 		let monsters = if at < self.reference_date {
@@ -77,7 +77,7 @@ impl<'a> Boueigun<'a> {
 impl<'a> Information for Boueigun<'a> {
 	fn information(&self, criteria: InformationCriteria) -> Option<String> {
 		if self.nickname_regex.is_match(&criteria.text) {
-			let info = self.current_monster(criteria.at);
+			let info = self.current_status(criteria.at);
 			Some(self.information
 				.replace("__CURRENT_MONSTER__", info.current.display())
 				.replace("__RESISTANCES__", info.current.resistances().display(None::<Vec<String>>).as_str())
@@ -181,28 +181,28 @@ mod tests {
 		let bou = load(&mon);
 
 		assert_eq!(
-			bou.current_monster(Local.ymd(2020, 6, 5).and_hms(15, 0, 0)).current.id,
+			bou.current_status(Local.ymd(2020, 6, 5).and_hms(15, 0, 0)).current.id,
 			"juga1"
 		);
 
 		assert_eq!(
-			bou.current_monster(Local.ymd(2020, 6, 5).and_hms(15, 59, 59)).current.id,
+			bou.current_status(Local.ymd(2020, 6, 5).and_hms(15, 59, 59)).current.id,
 			"juga1"
 		);
 
 		assert_eq!(
-			bou.current_monster(Local.ymd(2020, 6, 5).and_hms(16, 00, 00)).current.id,
+			bou.current_status(Local.ymd(2020, 6, 5).and_hms(16, 00, 00)).current.id,
 			"tekki1"
 		);
 
 		// last of 1st lap
 		assert_eq!(
-			bou.current_monster(bou.reference_date + chrono::Duration::minutes(bou.total_duration - 1)).current.id,
+			bou.current_status(bou.reference_date + chrono::Duration::minutes(bou.total_duration - 1)).current.id,
 			"all2"
 		);
 		// 2nd lap
 		assert_eq!(
-			bou.current_monster(bou.reference_date + chrono::Duration::minutes(bou.total_duration)).current.id,
+			bou.current_status(bou.reference_date + chrono::Duration::minutes(bou.total_duration)).current.id,
 			"juga1"
 		);
 	}
@@ -213,31 +213,31 @@ mod tests {
 		let bou = load(&mon);
 
 		assert_eq!(
-			bou.current_monster(Local.ymd(2020, 6, 5).and_hms(14, 59, 59)).current.id,
+			bou.current_status(Local.ymd(2020, 6, 5).and_hms(14, 59, 59)).current.id,
 			"all2"
 		);
 
 		assert_eq!(
-			bou.current_monster(Local.ymd(2020, 6, 5).and_hms(14, 0, 0)).current.id,
+			bou.current_status(Local.ymd(2020, 6, 5).and_hms(14, 0, 0)).current.id,
 			"all2"
 		);
 
 		assert_eq!(
-			bou.current_monster(Local.ymd(2020, 6, 5).and_hms(13, 59, 59)).current.id,
+			bou.current_status(Local.ymd(2020, 6, 5).and_hms(13, 59, 59)).current.id,
 			"ryurin2"
 		);
 		// last of 1st lap
 		assert_eq!(
-			bou.current_monster(bou.reference_date - chrono::Duration::minutes(bou.total_duration - 1)).current.id,
+			bou.current_status(bou.reference_date - chrono::Duration::minutes(bou.total_duration - 1)).current.id,
 			"juga1"
 		);
 		// 2nd lap
 		assert_eq!(
-			bou.current_monster(bou.reference_date - chrono::Duration::minutes(bou.total_duration)).current.id,
+			bou.current_status(bou.reference_date - chrono::Duration::minutes(bou.total_duration)).current.id,
 			"juga1"
 		);
 		assert_eq!(
-			bou.current_monster(bou.reference_date - chrono::Duration::minutes(bou.total_duration) - chrono::Duration::nanoseconds(1)).current.id,
+			bou.current_status(bou.reference_date - chrono::Duration::minutes(bou.total_duration) - chrono::Duration::nanoseconds(1)).current.id,
 			"all2"
 		);
 
