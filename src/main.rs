@@ -15,6 +15,7 @@ use std::process;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
+use clap;
 use mastors::prelude::*;
 use mastors::api::{
     v1::accounts,
@@ -37,6 +38,34 @@ const ENV: &str = ".env.test.st";
 fn main() {
     env_logger::init();
 
+    let matches = clap::App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .arg(
+            clap::Arg::with_name("listen")
+                .short("l")
+                .long("listen")
+                .case_insensitive(true)
+                .conflicts_with("announce")
+                .help("Listen to some timelines and react to toots that contain some keywords.")
+
+        )
+        .arg(
+            clap::Arg::with_name("announce")
+                .short("a")
+                .long("announce")
+                .case_insensitive(true)
+                .conflicts_with("listen")
+                .help("Announce information of some contents in Astoltia.")
+        )
+        .group(
+            clap::ArgGroup::with_name("mode")
+            .args(&["listen", "announce"])
+            .required(true)
+        )
+        .get_matches();
+    
     let conn = get_conn();
     let me = match accounts::verify_credentials::get(&conn).send() {
         Ok(me) => Arc::new(me),
@@ -168,4 +197,8 @@ fn get_conn() -> Connection {
             process::exit(1);
         },
     }
+}
+
+fn reaction() {
+
 }
