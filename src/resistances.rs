@@ -200,6 +200,12 @@ impl Resistances<Vec<Vec<Resistance>>> {
 
 }
 
+impl Default for Resistances<Vec<Vec<Resistance>>> {
+	fn default() -> Self {
+		Resistances::new()
+	}
+}
+
 impl<'de> de::Deserialize<'de> for Resistances<Vec<Vec<Resistance>>> {
 	fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
 	where
