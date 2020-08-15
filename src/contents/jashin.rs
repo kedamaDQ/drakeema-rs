@@ -12,8 +12,8 @@ use crate::{
 use super::{
 	Announcement,
 	AnnouncementCriteria,
-	Information,
-	InformationCriteria,
+	Reaction,
+	ReactionCriteria,
 };
 
 const DATA: &str = "data/contents/jashin.json";
@@ -75,8 +75,8 @@ impl<'a> Announcement for Jashin<'a> {
 	}
 }
 
-impl<'a> Information for Jashin<'a> {
-	fn information(&self, criteria: InformationCriteria) -> Option<String> {
+impl<'a> Reaction for Jashin<'a> {
+	fn reaction(&self, criteria: ReactionCriteria) -> Option<String> {
 		if self.nickname_regex.is_match(criteria.text.as_str()) {
 			let title = self.title(criteria.at);
 			Some(self.information

@@ -8,7 +8,7 @@ use crate::{
 	monsters::{ Monster, Monsters },
 	utils::transform_string_to_regex,
 };
-use super::{ Information, InformationCriteria };
+use super::{ Reaction, ReactionCriteria };
 
 const DATA: &str = "data/contents/boueigun.json";
 
@@ -74,8 +74,8 @@ impl<'a> Boueigun<'a> {
 	}
 }
 
-impl<'a> Information for Boueigun<'a> {
-	fn information(&self, criteria: InformationCriteria) -> Option<String> {
+impl<'a> Reaction for Boueigun<'a> {
+	fn reaction(&self, criteria: ReactionCriteria) -> Option<String> {
 		if self.nickname_regex.is_match(&criteria.text) {
 			let info = self.current_status(criteria.at);
 			Some(self.information

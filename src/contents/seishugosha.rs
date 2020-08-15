@@ -11,8 +11,8 @@ use crate::{
 use super::{
 	Announcement,
 	AnnouncementCriteria,
-	Information,
-	InformationCriteria,
+	Reaction,
+	ReactionCriteria,
 };
 
 const DATA: &str = "data/contents/seishugosha.json";
@@ -77,8 +77,8 @@ impl<'a> Announcement for Seishugosha<'a> {
 	}
 }
 
-impl<'a> Information for Seishugosha<'a> {
-	fn information(&self, criteria: InformationCriteria) -> Option<String> {
+impl<'a> Reaction for Seishugosha<'a> {
+	fn reaction(&self, criteria: ReactionCriteria) -> Option<String> {
 		if self.is_match(criteria.text.as_str()) {
 			return Some(self.announcement(AnnouncementCriteria { at: criteria.at }));
 		}
