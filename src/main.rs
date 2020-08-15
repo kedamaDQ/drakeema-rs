@@ -47,7 +47,6 @@ fn main() {
                 .short("l")
                 .long("listen")
                 .case_insensitive(false)
-//                .conflicts_with("announce")
                 .help("Listen to some timelines and react to toots that contain some keywords")
 
         )
@@ -56,7 +55,6 @@ fn main() {
                 .short("a")
                 .long("announce")
                 .case_insensitive(false)
-//                .conflicts_with("listen")
                 .help("Announce information of some contents in Astoltia")
         )
         .group(
