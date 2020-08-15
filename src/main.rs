@@ -24,8 +24,8 @@ use mastors::api::{
 use contents::{
     Announcement,
     AnnouncementCriteria,
-    Information,
-    InformationCriteria
+    Reaction,
+    ReactionCriteria,
 };
 
 const KEEMASAN_REGEX: &str = "キーマさん";
@@ -50,7 +50,7 @@ fn main() {
     let seishugosha = contents::Seishugosha::load(&monsters).unwrap();
     let boueigun = contents::Boueigun::load(&monsters).unwrap();
 
-    let informations: Vec<&dyn Information> = vec![
+    let reactions: Vec<&dyn Reaction> = vec![
         &jashin,
         &seishugosha,
         &boueigun,
@@ -113,8 +113,8 @@ fn main() {
         };
 
         if keemasan.is_match(content) && oshiete.is_match(content) {
-            let response = informations.iter()
-                .map(|i| i.information(InformationCriteria::new(chrono::Local::now(), content)))
+            let response = reactions.iter()
+                .map(|i| i.reaction(ReactionCriteria::new(chrono::Local::now(), content)))
                 .filter(|i| i.is_some())
                 .map(|i| i.unwrap())
                 .collect::<Vec<String>>()

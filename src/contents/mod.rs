@@ -24,18 +24,18 @@ impl AnnouncementCriteria {
 	}
 }
 
-pub trait Information {
-	fn information(&self, criteria: InformationCriteria) -> Option<String>;
+pub trait Reaction {
+	fn reaction(&self, criteria: ReactionCriteria) -> Option<String>;
 }
 
-pub struct InformationCriteria {
+pub struct ReactionCriteria {
 	at: DateTime<Local>,
 	text: String,
 }
 
-impl InformationCriteria {
+impl ReactionCriteria {
 	pub fn new(at: DateTime<Local>, text: impl Into<String>) -> Self {
-		InformationCriteria {
+		ReactionCriteria {
 			at,
 			text: text.into(),
 		}
