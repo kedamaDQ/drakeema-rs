@@ -65,7 +65,6 @@ impl<'a> Emojis<'a> {
 		let placeholder = self.placeholder.clone();
 		while text.find(placeholder.as_str()).is_some() {
 			text = text.replacen(placeholder.as_str(), self.get().as_str(), 1);
-			println!("{}", text);
 		}
 		text
 	}
