@@ -9,7 +9,7 @@ use crate::{
 	resistances::Resistances,
 	utils::transform_string_to_regex,
 };
-use super::{
+use crate::features::{
 	Announcement,
 	AnnouncementCriteria,
 	Reaction,
@@ -49,36 +49,39 @@ impl<'a> Jashin<'a> {
 }
 
 impl<'a> Announcement for Jashin<'a> {
-	fn announcement(&self, criteria: AnnouncementCriteria) -> String {
+	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		use std::ops::Add;
 
-		let title_today = self.title(criteria.at);
-		let title_tomorrow = self.title(criteria.at.add(Duration::hours(24)));
-		let title_yesterday = self.title(criteria.at.add(Duration::hours(-24)));
+		let title_today = self.title(criteria.at());
+		let title_tomorrow = self.title(criteria.at().add(Duration::hours(24)));
+		let title_yesterday = self.title(criteria.at().add(Duration::hours(-24)));
 
 		if title_today != title_yesterday {
 			// Date is start date of the period
-			self.announcement_at_start
+			Some(self.announcement_at_start
 				.replace("__TITLE__", title_today.display_title())
 				.replace("__MONSTERS__", title_today.display_monsters().as_str())
 				.replace("__RESISTANCES__", title_today.display_resistances(Some(&self.area_names)).as_str())
+			)
 		} else if title_today != title_tomorrow {
 			// Date is end date of period
-			self.announcement_at_end
+			Some(self.announcement_at_end
 				.replace("__TITLE1__", title_today.display_title())
 				.replace("__TITLE2__", title_tomorrow.display_title())
+			)
 		} else {
 			// Date is duaring the period
-			self.announcement
+			Some(self.announcement
 				.replace("__TITLE__", title_today.display_title())
+			)
 		}
 	}
 }
 
 impl<'a> Reaction for Jashin<'a> {
-	fn reaction(&self, criteria: ReactionCriteria) -> Option<String> {
-		if self.nickname_regex.is_match(criteria.text.as_str()) {
-			let title = self.title(criteria.at);
+	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		if self.nickname_regex.is_match(criteria.text()) {
+			let title = self.title(criteria.at());
 			Some(self.information
     			.replace("__TITLE__", title.display_title())
     			.replace("__MONSTERS__", title.display_monsters().as_str())
@@ -340,7 +343,7 @@ mod tests {
 
 	#[test]
 	fn test_title() {
-		let monsters = crate::monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let jashin = data(&monsters);
 
 		// 1st title
@@ -413,7 +416,7 @@ mod tests {
 
 	#[test]
 	fn test_past_date() {
-		let monsters = crate::monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let jashin = data(&monsters);
 
 		// Edge of title before reference date

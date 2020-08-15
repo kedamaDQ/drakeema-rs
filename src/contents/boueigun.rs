@@ -8,7 +8,7 @@ use crate::{
 	monsters::{ Monster, Monsters },
 	utils::transform_string_to_regex,
 };
-use super::{ Reaction, ReactionCriteria };
+use crate::features::{ Reaction, ReactionCriteria };
 
 const DATA: &str = "data/contents/boueigun.json";
 
@@ -75,9 +75,9 @@ impl<'a> Boueigun<'a> {
 }
 
 impl<'a> Reaction for Boueigun<'a> {
-	fn reaction(&self, criteria: ReactionCriteria) -> Option<String> {
-		if self.nickname_regex.is_match(&criteria.text) {
-			let info = self.current_status(criteria.at);
+	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		if self.nickname_regex.is_match(criteria.text()) {
+			let info = self.current_status(criteria.at());
 			Some(self.information
 				.replace("__CURRENT_MONSTER__", info.current.display())
 				.replace("__RESISTANCES__", info.current.resistances().display(None::<Vec<String>>).as_str())
@@ -172,12 +172,11 @@ struct MonsterJson {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::monsters;
 	use chrono::offset::TimeZone;
 
 	#[test]
 	fn test_current_positive() {
-		let mon = monsters::load().unwrap();
+		let mon = Monsters::load().unwrap();
 		let bou = load(&mon);
 
 		assert_eq!(
@@ -209,7 +208,7 @@ mod tests {
 
 	#[test]
 	fn test_current_negative() {
-		let mon = monsters::load().unwrap();
+		let mon = Monsters::load().unwrap();
 		let bou = load(&mon);
 
 		assert_eq!(

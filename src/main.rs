@@ -4,11 +4,14 @@ extern crate log;
 mod contents;
 mod emojis;
 mod error;
+mod features;
 mod listeners;
 mod monsters;
 mod resistances;
 mod utils;
 
+pub use monsters::Monsters;
+pub use emojis::Emojis;
 pub use error::{ Error, Result };
 
 use std::process;
@@ -21,9 +24,7 @@ use mastors::api::{
     v1::statuses,
     v1::streaming,
 };
-use contents::{
-    Announcement,
-    AnnouncementCriteria,
+use features::{
     Reaction,
     ReactionCriteria,
 };
@@ -37,6 +38,41 @@ const ENV: &str = ".env.test.st";
 fn main() {
     env_logger::init();
 
+    let matches = clap::App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .arg(
+            clap::Arg::with_name("listen")
+                .short("l")
+                .long("listen")
+                .case_insensitive(false)
+                .help("Listen to some timelines and react to toots that contain some keywords")
+
+        )
+        .arg(
+            clap::Arg::with_name("announce")
+                .short("a")
+                .long("announce")
+                .case_insensitive(false)
+                .help("Announce information of some contents in Astoltia")
+        )
+        .group(
+            clap::ArgGroup::with_name("mode")
+            .args(&["listen", "announce"])
+            .required(true)
+        )
+        .get_matches();
+    
+    if matches.is_present("announce") {
+        match features::announce() {
+            Ok(_) => info!("Done an announcement"),
+            Err(e) => error!("{}", e),
+        };
+
+        process::exit(0);
+    }
+
     let conn = get_conn();
     let me = match accounts::verify_credentials::get(&conn).send() {
         Ok(me) => Arc::new(me),
@@ -45,7 +81,7 @@ fn main() {
             process::exit(2);
         },
     };
-    let monsters = monsters::load().unwrap();
+    let monsters = Monsters::load().unwrap();
     let jashin = contents::Jashin::load(&monsters).unwrap();
     let seishugosha = contents::Seishugosha::load(&monsters).unwrap();
     let boueigun = contents::Boueigun::load(&monsters).unwrap();
@@ -56,13 +92,7 @@ fn main() {
         &boueigun,
     ];
 
-    let announcements: Vec<&dyn Announcement> = vec![
-        &jashin,
-        &seishugosha,
-    ];
-
     let (tx, rx) = mpsc::channel();
-
 
     let tx_for_local = mpsc::Sender::clone(&tx);
     let me_for_local = Arc::clone(&me);
@@ -114,7 +144,7 @@ fn main() {
 
         if keemasan.is_match(content) && oshiete.is_match(content) {
             let response = reactions.iter()
-                .map(|i| i.reaction(ReactionCriteria::new(chrono::Local::now(), content)))
+                .map(|i| i.reaction(&ReactionCriteria::new(chrono::Local::now(), content)))
                 .filter(|i| i.is_some())
                 .map(|i| i.unwrap())
                 .collect::<Vec<String>>()
@@ -168,4 +198,8 @@ fn get_conn() -> Connection {
             process::exit(1);
         },
     }
+}
+
+fn reaction() {
+
 }

@@ -8,7 +8,7 @@ use crate::{
 	monsters::{ Monster, Monsters },
 	utils::transform_string_to_regex,
 };
-use super::{
+use crate::features::{
 	Announcement,
 	AnnouncementCriteria,
 	Reaction,
@@ -63,32 +63,32 @@ impl<'a> Seishugosha<'a> {
 }
 
 impl<'a> Announcement for Seishugosha<'a> {
-	fn announcement(&self, criteria: AnnouncementCriteria) -> String {
+	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		let parts = self.monsters.iter()
 			.map(|m| {
 				self.announcement.parts.clone()
 					.replace("__NAME__", m.monster.display())
-					.replace("__LEVEL__", self.level_name(criteria.at, m.offset))
+					.replace("__LEVEL__", self.level_name(criteria.at(), m.offset))
 			})
 			.collect::<Vec<String>>()
 			.join("\n");
 
-		self.announcement.start.clone() + &parts + &self.announcement.end
+		Some(self.announcement.start.clone() + &parts + &self.announcement.end)
 	}
 }
 
 impl<'a> Reaction for Seishugosha<'a> {
-	fn reaction(&self, criteria: ReactionCriteria) -> Option<String> {
-		if self.is_match(criteria.text.as_str()) {
-			return Some(self.announcement(AnnouncementCriteria { at: criteria.at }));
+	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		if self.is_match(criteria.text()) {
+			return self.announcement(&AnnouncementCriteria::new(criteria.at()));
 		}
 
 		let informations = self.monsters.iter()
-			.filter(|m| m.is_match(criteria.text.as_str()))
+			.filter(|m| m.is_match(criteria.text()))
 			.map(|m| {
 				self.information.clone()
 					.replace("__NAME__", m.official_name())
-					.replace("__LEVEL__", self.level_name(criteria.at, m.offset))
+					.replace("__LEVEL__", self.level_name(criteria.at(), m.offset))
 					.replace("__RESISTANCES__", m.resistances().display(None::<Vec<String>>).as_str())
 			})
 			.collect::<Vec<String>>();
@@ -185,12 +185,11 @@ struct MonsterJson {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::monsters;
 	use chrono::offset::TimeZone;
 
 	#[test]
 	fn test_positive() {
-		let monsters = monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let ssgs = load(&monsters);
 
 		assert_eq!(
@@ -222,7 +221,7 @@ mod tests {
 
 	#[test]
 	fn test_negative() {
-		let monsters = monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let ssgs = load(&monsters);
 
 		assert_eq!(
