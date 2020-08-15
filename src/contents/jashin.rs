@@ -340,7 +340,7 @@ mod tests {
 
 	#[test]
 	fn test_title() {
-		let monsters = crate::monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let jashin = data(&monsters);
 
 		// 1st title
@@ -413,7 +413,7 @@ mod tests {
 
 	#[test]
 	fn test_past_date() {
-		let monsters = crate::monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let jashin = data(&monsters);
 
 		// Edge of title before reference date

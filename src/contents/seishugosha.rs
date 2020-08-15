@@ -185,12 +185,11 @@ struct MonsterJson {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::monsters;
 	use chrono::offset::TimeZone;
 
 	#[test]
 	fn test_positive() {
-		let monsters = monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let ssgs = load(&monsters);
 
 		assert_eq!(
@@ -222,7 +221,7 @@ mod tests {
 
 	#[test]
 	fn test_negative() {
-		let monsters = monsters::load().unwrap();
+		let monsters = Monsters::load().unwrap();
 		let ssgs = load(&monsters);
 
 		assert_eq!(
