@@ -41,7 +41,3 @@ pub fn announce() -> Result<()> {
 
 	Ok(())
 }
-
-struct AnnouncementJson {
-
-}
