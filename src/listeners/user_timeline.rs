@@ -9,11 +9,11 @@ use regex::Regex;
 pub struct UserTimelineListener<'a> {
 	conn: &'a Connection,
 	me: &'a Account, 
-	tx: &'a Sender<Status>,
+	tx: Sender<Status>,
 }
 
 impl<'a> UserTimelineListener<'a> {
-	pub fn new(conn: &'a Connection, me: &'a Account, tx: &'a Sender<Status>) -> Self {
+	pub fn new(conn: &'a Connection, me: &'a Account, tx: Sender<Status>) -> Self {
 		UserTimelineListener {
 			conn,
 			me,

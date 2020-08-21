@@ -3,11 +3,11 @@ use mastors::prelude::*;
 
 pub struct LocalTimelineListener<'a> {
 	me: &'a Account,
-	tx: &'a Sender<Status>,
+	tx: Sender<Status>,
 }
 
 impl<'a> LocalTimelineListener<'a> {
-	pub fn new(me: &'a Account, tx: &'a Sender<Status>) -> Self {
+	pub fn new(me: &'a Account, tx: Sender<Status>) -> Self {
 		LocalTimelineListener {
 			me,
 			tx,
