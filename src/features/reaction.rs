@@ -72,11 +72,7 @@ pub fn attach() -> Result<()> {
     let keemasan = regex::Regex::from_str(KEEMASAN_REGEX).unwrap();
     let oshiete = regex::Regex::from_str(OSHIETE_REGEX).unwrap();
 
-    for message in rx {
-        let status = match message {
-            Ok(status) => status,
-            Err(e) => return Err(e),
-        };
+    for status in rx {
         let content = match status.content() {
             Some(content) => content,
             None => continue,

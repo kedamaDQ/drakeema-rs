@@ -5,16 +5,15 @@ use mastors::api::v1::accounts::id::{
 	unfollow,
 };
 use regex::Regex;
-use crate::Result;
 
 pub struct UserTimelineListener<'a> {
 	conn: &'a Connection,
 	me: &'a Account, 
-	tx: Sender<Result<Status>>,
+	tx: Sender<Status>,
 }
 
 impl<'a> UserTimelineListener<'a> {
-	pub fn new(conn: &'a Connection, me: &'a Account, tx: Sender<Result<Status>>) -> Self {
+	pub fn new(conn: &'a Connection, me: &'a Account, tx: Sender<Status>) -> Self {
 		UserTimelineListener {
 			conn,
 			me,
@@ -39,7 +38,7 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 			info!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
-		self.tx.send(Ok(status.clone())).map_err(|e| crate::Error::SendStatusMessageError(Box::new(e)))
+		self.tx.send(status.clone()).map_err(|e| crate::Error::SendStatusMessageError(Box::new(e)))
 	}
 
 	fn notification(&self, notification: &Notification) -> std::result::Result<(), Self::Error> {
