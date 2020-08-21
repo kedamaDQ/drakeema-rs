@@ -69,9 +69,9 @@ pub fn attach() -> Result<()> {
         &boueigun,
     ];
 
-    let mut emojis = Emojis::load(&conn).unwrap();
-    let keemasan = regex::Regex::from_str(KEEMASAN_REGEX).unwrap();
-    let oshiete = regex::Regex::from_str(OSHIETE_REGEX).unwrap();
+    let mut emojis = Emojis::load(&conn)?;
+    let keemasan = regex::Regex::from_str(KEEMASAN_REGEX)?;
+    let oshiete = regex::Regex::from_str(OSHIETE_REGEX)?;
 
     for status in rx {
         let content = match status.content() {
