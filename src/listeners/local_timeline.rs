@@ -18,7 +18,7 @@ impl<'a> LocalTimelineListener<'a> {
 impl<'a> EventListener for LocalTimelineListener<'a> {
 	type Error = crate::Error;
 
-	fn update(&self, status: &Status) -> std::result::Result<(), Self::Error> {
+	fn update(&self, status: &Status) -> Result<(), Self::Error> {
 		if status.account() == self.me {
 			info!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
