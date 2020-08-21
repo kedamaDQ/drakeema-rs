@@ -20,14 +20,10 @@ pub struct Boueigun<'a> {
 
 impl<'a> Boueigun<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
-		let inner: BoueigunJson = match serde_json::from_reader(
+		let inner: BoueigunJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
-		) {
-			Ok(bj) => bj,
-			Err(e) => return Err(
-				Error::ParseJsonError(DATA.to_owned(), e)
-			)
-		};
+		)
+		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
 		let monsters = BoueigunMonsters::new(&inner.monsters, monsters)?;
 		let total_duration = monsters.iter()

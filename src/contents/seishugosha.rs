@@ -24,14 +24,10 @@ pub struct Seishugosha<'a> {
 
 impl<'a> Seishugosha<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
-		let inner: SeishugoshaJson = match serde_json::from_reader(
+		let inner: SeishugoshaJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
-		) {
-			Ok(sj) => sj,
-			Err(e) => return Err(
-				Error::ParseJsonError(DATA.to_owned(), e)
-			),
-		};
+		)
+		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
 		Ok(Seishugosha {
 			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters)?,
