@@ -26,14 +26,10 @@ pub struct Jashin<'a> {
 
 impl<'a> Jashin<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
-    	let mut inner: JashinJson = match serde_json::from_reader(
+    	let mut inner: JashinJson = serde_json::from_reader(
     		BufReader::new(File::open(DATA)?)
-    	) {
-    		Ok(jj) => jj,
-    		Err(e) => return Err(
-    			Error::ParseJsonError(DATA.to_owned(), e)
-    		),
-		};
+		)
+		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 

@@ -101,10 +101,7 @@ impl<'de> de::Deserialize<'de> for Resistance {
         D: de::Deserializer<'de>,
     {
 		let s = String::deserialize(deserializer)?;
-		match Resistance::from_str(s.as_str()) {
-			Ok(r) => Ok(r),
-			Err(e) => Err(de::Error::custom(e)),
-		}
+		Resistance::from_str(s.as_str()).map_err(de::Error::custom)
     }
 }
 

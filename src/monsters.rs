@@ -4,42 +4,13 @@ use std::io::BufReader;
 use regex::Regex;
 use serde::Deserialize;
 use crate::{
+	Error,
 	Result,
 	resistances::{ Resistance, Resistances },
 	utils::transform_string_to_regex,
 };
 
 const DATA_DIR: &str = "data/monsters";
-
-/*
-pub fn load() -> crate::Result<HashMap<String, Monster>> {
-	let mut monsters: Monsters = HashMap::new();
-
-	let files = fs::read_dir(DATA_DIR)?
-		.filter_map(|dir_entry| {
-			let dir_entry = dir_entry.ok()?;
-			if dir_entry.file_type().ok()?.is_file() &&
-				dir_entry.path().extension()? == "json" {
-					Some(dir_entry.path())
-			} else {
-				None
-			}
-		});
-	
-	for file in files {
-		let m: Monster = match serde_json::from_reader(
-			BufReader::new(File::open(&file)?)
-		) {
-			Ok(monster) => monster,
-			Err(e) => return Err(crate::Error::ParseJsonError(file.to_string_lossy().to_string(), e)),
-		};
-
-		monsters.insert(m.id().to_owned(), m);
-	}
-
-	Ok(monsters)
-}
-*/
 
 pub struct Monsters {
 	inner: HashMap<String, Monster>,
@@ -61,13 +32,11 @@ impl Monsters {
     		});
     	
     	for file in files {
-    		let m: Monster = match serde_json::from_reader(
+    		let m: Monster = serde_json::from_reader(
     			BufReader::new(File::open(&file)?)
-    		) {
-    			Ok(monster) => monster,
-    			Err(e) => return Err(crate::Error::ParseJsonError(file.to_string_lossy().to_string(), e)),
-    		};
-    
+			)
+			.map_err(|e| Error::ParseJsonError(file.to_string_lossy().to_string(), e))?;    
+
     		inner.insert(m.id().to_owned(), m);
     	}
     
