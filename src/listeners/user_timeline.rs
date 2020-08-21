@@ -5,15 +5,16 @@ use mastors::api::v1::accounts::id::{
 	unfollow,
 };
 use regex::Regex;
+use crate::Result;
 
 pub struct UserTimelineListener<'a> {
 	conn: &'a Connection,
 	me: &'a Account, 
-	tx: &'a Sender<Status>,
+	tx: Sender<Result<Status>>,
 }
 
 impl<'a> UserTimelineListener<'a> {
-	pub fn new(conn: &'a Connection, me: &'a Account, tx: &'a Sender<Status>) -> Self {
+	pub fn new(conn: &'a Connection, me: &'a Account, tx: Sender<Result<Status>>) -> Self {
 		UserTimelineListener {
 			conn,
 			me,
@@ -28,7 +29,7 @@ const REGEX_UNFOLLOW_REQUEST: &str = r#"(?:フォロー|ふぉろー|follow)\s*(
 impl<'a> EventListener for UserTimelineListener<'a> {
 	type Error = crate::Error;
 
-	fn update(&self, status: &Status) -> Result<(), Self::Error> {
+	fn update(&self, status: &Status) -> std::result::Result<(), Self::Error> {
 		if status.account() == self.me {
 			info!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
@@ -38,10 +39,10 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 			info!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
-		self.tx.send(status.clone()).map_err(|e| crate::Error::SendStatusMessageError(Box::new(e)))
+		self.tx.send(Ok(status.clone())).map_err(|e| crate::Error::SendStatusMessageError(Box::new(e)))
 	}
 
-	fn notification(&self, notification: &Notification) -> Result<(), Self::Error> {
+	fn notification(&self, notification: &Notification) -> std::result::Result<(), Self::Error> {
 		info!("Notification raceived: {}: {}", notification.notification_type(), notification.id());
 
 		if notification.is_mention() {
