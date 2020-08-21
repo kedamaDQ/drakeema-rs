@@ -38,7 +38,7 @@ pub fn announce() -> Result<()> {
 		.join("\n\n");
 
 	if !text.is_empty() {
-		let conn = Connection::from_file(".env.test.st")?;
+		let conn = Connection::from_file(crate::ENV_FILE)?;
 		statuses::post(
 			&conn,
 			Emojis::load(&conn)?.emojify(text)
