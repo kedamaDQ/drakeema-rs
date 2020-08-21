@@ -11,6 +11,7 @@ use crate::{
 use crate::contents::{
 	Jashin,
 	Seishugosha,
+	WeeklyContents,
 };
 use super::{
 	Announcement,
@@ -19,9 +20,14 @@ use super::{
 
 pub fn announce() -> Result<()> {
 	let monsters = Monsters::load()?;
-	let jashin = Jashin::load(&monsters)?;
+	let weekly_contents = WeeklyContents::load()?;
 	let seishugosha = Seishugosha::load(&monsters)?;
-	let contents: Vec<&dyn Announcement> = vec![&seishugosha, &jashin];
+	let jashin = Jashin::load(&monsters)?;
+	let contents: Vec<&dyn Announcement> = vec![
+		&weekly_contents,
+		&seishugosha,
+		&jashin,
+	];
 	let criteria = AnnouncementCriteria::new(Local::now());
 
 	let text = contents.iter()
