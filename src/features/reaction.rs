@@ -61,6 +61,7 @@ pub fn attach() -> Result<()> {
     let jashin = contents::Jashin::load(&monsters)?;
     let seishugosha = contents::Seishugosha::load(&monsters)?;
     let boueigun = contents::Boueigun::load(&monsters)?;
+    let keema = contents::Keema::load()?;
 
     let reactions: Vec<&dyn Reaction> = vec![
         &jashin,
@@ -78,25 +79,34 @@ pub fn attach() -> Result<()> {
             None => continue,
         };
 
+        let response: Option<String>;
+
         if keemasan.is_match(content) && oshiete.is_match(content) {
-            let mut response = reactions.iter()
+            let mut r = reactions.iter()
                 .map(|i| i.reaction(&ReactionCriteria::new(chrono::Local::now(), content)))
                 .filter(|i| i.is_some())
                 .map(|i| i.unwrap())
                 .collect::<Vec<String>>()
                 .join("\n");
 
-            if response.is_empty() {
-                response = String::from("？");
+            if r.is_empty() {
+                r = String::from("？");
             }
+            response = Some(r);
+        } else {
+            response = keema.reaction(&ReactionCriteria::new(chrono::Local::now(), content));
+        }
 
-            let response = emojis.emojify(String::from("@") + status.account().acct() + "\n\n" + response.as_str());
-
+        if let Some(response) = response {
+            let response = emojis.emojify(
+                String::from("@") + status.account().acct() + "\n\n" + response.as_str()
+            );
+    
             let mut post = statuses::post(&conn, response);
             if status.account().is_remote() {
                 post = post.in_reply_to_id(status.id());
             }
-
+    
             match post.send() {
                 Ok(posted) => info!(
                     "Posted: {}, {:#?}",
@@ -105,16 +115,10 @@ pub fn attach() -> Result<()> {
                 ),
                 Err(e) => error!("Can't send status: {}", e),
             };
-
-        } /*else {
-            kantan-na-koto
         }
-        */
     }
 
-    info!("Exit drakeema");
-    process::exit(0);
-
+    Ok(())
 }
 
 fn listen(
