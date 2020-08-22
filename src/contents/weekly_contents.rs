@@ -55,7 +55,11 @@ impl Announcement for WeeklyContents {
 		let announcement = vec![
 			self.contents_to_end(criteria.at()),
 			self.contents_to_start(criteria.at())
-		].join("\n");
+		].iter()
+		.filter(|c| !c.is_empty())
+		.map(|c| c.to_owned())
+		.collect::<Vec<String>>()
+		.join("\n");
 
 		if announcement.is_empty() {
 			None
