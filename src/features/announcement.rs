@@ -11,6 +11,7 @@ use crate::{
 use crate::contents::{
 	Jashin,
 	Seishugosha,
+	WeeklyContents,
 };
 use super::{
 	Announcement,
@@ -19,9 +20,14 @@ use super::{
 
 pub fn announce() -> Result<()> {
 	let monsters = Monsters::load()?;
-	let jashin = Jashin::load(&monsters)?;
+	let weekly_contents = WeeklyContents::load()?;
 	let seishugosha = Seishugosha::load(&monsters)?;
-	let contents: Vec<&dyn Announcement> = vec![&seishugosha, &jashin];
+	let jashin = Jashin::load(&monsters)?;
+	let contents: Vec<&dyn Announcement> = vec![
+		&weekly_contents,
+		&seishugosha,
+		&jashin,
+	];
 	let criteria = AnnouncementCriteria::new(Local::now());
 
 	let text = contents.iter()
@@ -32,7 +38,7 @@ pub fn announce() -> Result<()> {
 		.join("\n\n");
 
 	if !text.is_empty() {
-		let conn = Connection::from_file(".env.test.st")?;
+		let conn = Connection::from_file(crate::ENV_FILE)?;
 		statuses::post(
 			&conn,
 			Emojis::load(&conn)?.emojify(text)
