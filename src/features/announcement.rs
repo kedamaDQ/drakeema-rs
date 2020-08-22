@@ -11,6 +11,7 @@ use crate::{
 use crate::contents::{
 	Jashin,
 	Seishugosha,
+	MonthlyContents,
 	WeeklyContents,
 };
 use super::{
@@ -21,10 +22,12 @@ use super::{
 pub fn announce() -> Result<()> {
 	let monsters = Monsters::load()?;
 	let weekly_contents = WeeklyContents::load()?;
+	let monthly_contents = MonthlyContents::load()?;
 	let seishugosha = Seishugosha::load(&monsters)?;
 	let jashin = Jashin::load(&monsters)?;
 	let contents: Vec<&dyn Announcement> = vec![
 		&weekly_contents,
+		&monthly_contents,
 		&seishugosha,
 		&jashin,
 	];
@@ -36,7 +39,8 @@ pub fn announce() -> Result<()> {
 		.map(|c| c.unwrap())
 		.collect::<Vec<String>>()
 		.join("\n\n");
-
+	println!("{}", text);
+	println!("{}", "あいうえお".len());
 	if !text.is_empty() {
 		let conn = Connection::from_file(crate::ENV_FILE)?;
 		statuses::post(
