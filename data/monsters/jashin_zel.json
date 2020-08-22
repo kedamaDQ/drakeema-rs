@@ -1,5 +1,6 @@
 {
 	"id": "jashin_zel",
+	"category": "jashin",
 	"display": "ゼルさん",
 	"official_name": "戦慄の魔元帥",
 	"nickname_regex": "(?:魔元帥|まげんすい|ゼル|ぜる|ｾﾞﾙ)",

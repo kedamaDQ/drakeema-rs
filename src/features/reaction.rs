@@ -67,6 +67,7 @@ pub fn attach() -> Result<()> {
         &jashin,
         &seishugosha,
         &boueigun,
+        &monsters,
     ];
 
     let mut emojis = Emojis::load(&conn)?;

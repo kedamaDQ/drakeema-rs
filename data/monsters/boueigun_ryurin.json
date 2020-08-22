@@ -1,5 +1,6 @@
 {
 	"id": "boueigun_ryurin",
+	"category": "boueigun",
 	"display": "灰燼の竜鱗兵団",
 	"official_name": "灰燼の竜鱗兵団",
 	"nickname_regex": "(?:灰燼|かいじん|カイジン|竜鱗|りゅうりん|リュウリン|豪雷将|バルケ|ばるけ)",

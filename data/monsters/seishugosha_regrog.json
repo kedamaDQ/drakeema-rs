@@ -1,5 +1,6 @@
 {
     "id": "seishugosha_regrog",
+	"category": "seishugosha",
     "display": "冥骸魔＆獣魔",
     "official_name": "冥骸魔レギルラッゾ＆獣魔ローガスト",
     "nickname_regex": "(?:冥骸魔|獣魔|めいがいま|メイガイマ|じゅうま|ジュウマ|レギロ|れぎろ|ﾚｷﾞﾛ|イッ?ヌホッ?ネ|いっ?ぬほっ?ね|ｲｯ?ﾇﾎｯ?ﾈ)",

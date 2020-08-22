@@ -1,8 +1,9 @@
 {
 	"id": "jashin_masako",
+	"category": "jashin",
 	"display": "ジャックポットおじさん",
 	"official_name": "魔幻の芸術家",
-	"nickname_regex": "(?:)",
+	"nickname_regex": "(?:芸術家|ジャックポットおじさん|(?:クワガタ|くわがた)おじさん|まさこ|マサコ|ﾏｻｺ)",
 	"resistances": [
 		["どく", "マヒ", "呪い"],
 		["呪い"],

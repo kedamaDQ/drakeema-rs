@@ -106,22 +106,22 @@ impl<'de> de::Deserialize<'de> for Resistance {
 }
 
 #[derive(Debug, Clone)]
-pub struct Resistances<T> {
-	inner: Box<T>,
+pub struct Resistances {
+	inner: Vec<Vec<Resistance>>,
 }
 
-impl<T> std::ops::Deref for Resistances<T> {
-	type Target = T;
+impl std::ops::Deref for Resistances {
+	type Target = Vec<Vec<Resistance>>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.inner
 	}
 }
 
-impl Resistances<Vec<Vec<Resistance>>> {
+impl Resistances {
 	pub fn new() -> Self {
 		Resistances {
-			inner: Box::new(vec![vec![]]),
+			inner: vec![vec![]],
 		}
 	}
 
@@ -145,8 +145,7 @@ impl Resistances<Vec<Vec<Resistance>>> {
 		}
 
 		Resistances {
-			inner: Box::new(
-				larger.iter()
+			inner: larger.iter()
     			.zip(smaller.iter().cycle())
     			.map(|(l, s)| {
     				let mut res = l.iter()
@@ -159,8 +158,7 @@ impl Resistances<Vec<Vec<Resistance>>> {
 					res.sort();
 					res
     			})
-				.collect::<Vec<Vec<Resistance>>>()
-			),
+				.collect::<Vec<Vec<Resistance>>>(),
 		}
 	}
 
@@ -182,12 +180,16 @@ impl Resistances<Vec<Vec<Resistance>>> {
 			self.iter()
 				.enumerate()
 				.map(|(i, resistances)| {
-					area_names.as_ref()[i].as_ref().to_string() + "は " +
-					resistances.iter()
+					let area_name = area_names.as_ref()[i].as_ref().to_string();
+					let resistances = resistances.iter()
 						.map(|r| r.to_string())
-						.collect::<Vec<String>>()
-						.join("、")
-						.as_ref()
+						.collect::<Vec<String>>();
+					
+					if resistances.is_empty() {
+						area_name + "は特にありません"
+					} else {
+						area_name + "は " + resistances.join("、").as_ref()
+					}
 				})
 				.collect::<Vec<String>>()
 				.join("、")
@@ -197,20 +199,20 @@ impl Resistances<Vec<Vec<Resistance>>> {
 
 }
 
-impl Default for Resistances<Vec<Vec<Resistance>>> {
+impl Default for Resistances {
 	fn default() -> Self {
 		Resistances::new()
 	}
 }
 
-impl<'de> de::Deserialize<'de> for Resistances<Vec<Vec<Resistance>>> {
+impl<'de> de::Deserialize<'de> for Resistances {
 	fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
 	where
 		D: de::Deserializer<'de>,
 	{
 		let v1 = Vec::deserialize(deserializer)?;
 		Ok(Resistances {
-			inner: Box::new(v1),
+			inner: v1,
 		})
 	}
 }
