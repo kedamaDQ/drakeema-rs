@@ -1,6 +1,6 @@
 {
-	"announcement_at_day": "__CONTENT__です！",
-	"announcement_at_day_before": "明日は__CONTENT__です！",
+	"announcement_at_day": "__CONTENTS__です！",
+	"announcement_at_day_before": "明日は__CONTENTS__です！",
 	"contents": [
     	{
     		"id": "tens_day",
