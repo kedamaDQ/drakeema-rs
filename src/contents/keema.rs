@@ -8,7 +8,7 @@ use crate::{
 use crate::features::{ Reaction, ReactionCriteria };
 use crate::utils::transform_string_to_regex;
 
-const DATA: &str = "data/contents/keema.json";
+const DATA: &str = "drakeema-data/contents/keema.json";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Keema {

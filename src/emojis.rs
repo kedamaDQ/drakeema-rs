@@ -10,7 +10,7 @@ use crate::{
 	utils::transform_string_to_regex,
 };
 
-const DATA: &str = "data/emojis.json";
+const DATA: &str = "drakeema-data/emojis.json";
 
 pub struct Emojis<'a> {
 	conn: &'a Connection,

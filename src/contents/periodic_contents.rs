@@ -8,7 +8,7 @@ use crate::{
 };
 use crate::features::{ Announcement, AnnouncementCriteria };
 
-const DATA: &str = "data/contents/periodic_contents.json";
+const DATA: &str = "drakeema-data/contents/periodic_contents.json";
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct PeriodicContents {
