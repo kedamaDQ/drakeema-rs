@@ -11,8 +11,8 @@ use crate::{
 };
 use crate::features::{ Reaction, ReactionCriteria };
 
-const DATA: &str = "data/contents/monsters.json";
-const DATA_DIR: &str = "data/monsters";
+const DATA: &str = "drakeema-data/contents/monsters.json";
+const DATA_DIR: &str = "drakeema-data/monsters";
 
 pub struct Monsters {
 	information: String,

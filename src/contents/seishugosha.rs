@@ -15,7 +15,7 @@ use crate::features::{
 	ReactionCriteria,
 };
 
-const DATA: &str = "data/contents/seishugosha.json";
+const DATA: &str = "drakeema-data/contents/seishugosha.json";
 
 pub struct Seishugosha<'a> {
 	monsters: SeishugoshaMonsters<'a>,

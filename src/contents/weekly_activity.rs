@@ -11,7 +11,7 @@ use crate::{
 };
 use crate::features::{ Announcement, AnnouncementCriteria };
 
-const DATA: &str = "data/contents/weekly_activity.json";
+const DATA: &str = "drakeema-data/contents/weekly_activity.json";
 const TMP: &str = "weekly_activity.tmp";
 
 #[derive(Debug, Clone, Deserialize)]

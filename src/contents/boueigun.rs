@@ -10,7 +10,7 @@ use crate::{
 };
 use crate::features::{ Reaction, ReactionCriteria };
 
-const DATA: &str = "data/contents/boueigun.json";
+const DATA: &str = "drakeema-data/contents/boueigun.json";
 
 pub struct Boueigun<'a> {
 	monsters: BoueigunMonsters<'a>,

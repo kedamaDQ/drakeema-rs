@@ -6,7 +6,7 @@ use crate::{
 	Result,
 };
 
-const TMP_PATH: &str = "data/tmp/";
+const TMP_PATH: &str = "drakeema-data/tmp/";
 
 pub fn save_tmp(file: impl AsRef<str>, data: impl AsRef<str>) -> Result<()> {
 	let path = TMP_PATH.to_string() + file.as_ref();

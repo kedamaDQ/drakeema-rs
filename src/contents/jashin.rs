@@ -16,7 +16,7 @@ use crate::features::{
 	ReactionCriteria,
 };
 
-const DATA: &str = "data/contents/jashin.json";
+const DATA: &str = "drakeema-data/contents/jashin.json";
 
 #[derive(Debug, Clone)]
 pub struct Jashin<'a> {
