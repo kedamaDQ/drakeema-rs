@@ -13,6 +13,7 @@ use crate::contents::{
 	MonthlyContents,
 	PeriodicContents,
 	Seishugosha,
+	WeeklyActivity,
 	WeeklyContents,
 };
 use super::{
@@ -27,12 +28,14 @@ pub fn announce() -> Result<()> {
 	let monthly_contents = MonthlyContents::load()?;
 	let seishugosha = Seishugosha::load(&monsters)?;
 	let jashin = Jashin::load(&monsters)?;
+	let weekly_activity = WeeklyActivity::load()?;
 	let contents: Vec<&dyn Announcement> = vec![
 		&periodic_contents,
 		&weekly_contents,
 		&monthly_contents,
 		&seishugosha,
 		&jashin,
+		&weekly_activity,
 	];
 	let criteria = AnnouncementCriteria::new(Local::now());
 

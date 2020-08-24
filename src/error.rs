@@ -51,5 +51,23 @@ pub enum Error {
 	LostStreamingConnectionError(
 		mastors::streaming::StreamType,
 		usize,
-	)
+	),
+
+	#[error(display = "Failed to load tmporary data: {}, {}", _0, _1)]
+	LoadTmpDataError(
+		String,
+		std::io::Error,
+	),
+
+	#[error(display = "Unexpected temporary data format: {}, {}", _0, _1)]
+	TmpDataFormatError(
+		String,
+		std::num::ParseIntError,
+	),
+
+	#[error(display = "Failed to save temporary data: {}, {}", _0, _1)]
+	SaveTmpDataError(
+		String,
+		std::io::Error,
+	),
 }

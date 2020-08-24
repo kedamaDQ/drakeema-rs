@@ -8,6 +8,7 @@ mod features;
 mod listeners;
 mod monsters;
 mod resistances;
+mod tmp_file;
 mod utils;
 
 pub use monsters::Monsters;

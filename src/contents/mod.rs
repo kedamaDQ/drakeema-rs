@@ -4,6 +4,7 @@ mod keema;
 mod monthly_contents;
 mod periodic_contents;
 mod seishugosha;
+mod weekly_activity;
 mod weekly_contents;
 
 pub use boueigun::Boueigun;
@@ -12,4 +13,5 @@ pub use keema::Keema;
 pub use monthly_contents::MonthlyContents;
 pub use periodic_contents::PeriodicContents;
 pub use seishugosha::Seishugosha;
+pub use weekly_activity::WeeklyActivity;
 pub use weekly_contents::WeeklyContents;
