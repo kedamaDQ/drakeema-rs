@@ -19,6 +19,8 @@ pub struct PeriodicContents {
 
 impl PeriodicContents {
 	pub fn load() -> Result<Self> {
+		info!("Initialize PeriodicContents");
+
 		serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -57,18 +59,23 @@ impl PeriodicContents {
 
 impl Announcement for PeriodicContents {
 	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+		trace!("Start to announce about periodic contents: {:?}", criteria);
+
 		let contents = vec![
 			self.contents_at_day(&criteria.at()),
 			self.contents_at_day_before(&criteria.at()),
 		].iter()
 		.filter(|c| !c.is_empty())
 		.map(|c| c.to_owned())
-		.collect::<Vec<String>>();
+		.collect::<Vec<String>>()
+		.join("\n");
 
 		if contents.is_empty() {
+			trace!("Nothing to announce about periodic_contents: {:?}", criteria);
 			None
 		} else {
-			Some(contents.join("\n"))
+			trace!("Found announcement about periodic contents: criteria: {:?}, announcement: {}", criteria, contents);
+			Some(contents)
 		}
 	}
 }

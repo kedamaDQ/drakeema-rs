@@ -21,6 +21,8 @@ pub struct WeeklyActivity {
 
 impl WeeklyActivity {
 	pub fn load() -> Result<Self> {
+		info!("Initialize WeeklyActivity");
+
 		serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -29,7 +31,9 @@ impl WeeklyActivity {
 }
 
 impl Announcement for WeeklyActivity {
-	fn announcement(&self, _criteria: &AnnouncementCriteria) -> Option<String> {
+	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+		trace!("Start to announce about weekly activity: {:?}", criteria);
+
 		use chrono::offset::TimeZone;
 
 		let conn = match Connection::from_file(crate::ENV_FILE) {
@@ -52,6 +56,7 @@ impl Announcement for WeeklyActivity {
 				return None;
 			},
 		};
+		trace!("Latest activity: {:?}", latest_activity);
 
 		let last_announced = match tmp_file::load_tmp_as_i64(TMP) {
 			Ok(opt) => match opt {
@@ -63,8 +68,10 @@ impl Announcement for WeeklyActivity {
 				return None;
 			},
 		};
+		trace!("Last announced: {:?}", last_announced);
 
 		if latest_activity.week() <= last_announced {
+			trace!("Nothing to announce about weekly activity: {:?}", criteria);
 			return None;
 		}
 
@@ -73,6 +80,8 @@ impl Announcement for WeeklyActivity {
 		).date();
 		let end_date = start_date + Duration::days(6);
 
+		trace!("Week to announce: from: {}, to: {}", start_date, end_date);
+
 		if let Err(e) = tmp_file::save_tmp(
 			TMP, latest_activity.week().to_string()
 		) {
@@ -80,12 +89,15 @@ impl Announcement for WeeklyActivity {
 			return None;
 		}
 
-		Some(self.announcement
+		let announcement = self.announcement
 			.replace("__START_DATE__", &start_date.format("%Y-%m-%d").to_string())
 			.replace("__END_DATE__", &end_date.format("%Y-%m-%d").to_string())
 			.replace("__ACTIVE_USER__", &latest_activity.logins().to_string())
-			.replace("__STATUS_COUNT__", &latest_activity.statuses().to_string())
-		)
+			.replace("__STATUS_COUNT__", &latest_activity.statuses().to_string());
+		
+		trace!("Found announcement for weekly activity: criteria: {:?}, announcement: {}", criteria, announcement);
+
+		Some(announcement)
 	}
 }
 

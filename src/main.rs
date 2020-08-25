@@ -16,11 +16,14 @@ pub use emojis::Emojis;
 pub use error::{ Error, Result };
 
 use std::process;
+use chrono::Local;
 
 pub const ENV_FILE: &str = ".env.test.st";
 
 fn main() {
     env_logger::init();
+
+    info!("Start drakeema");
 
     let matches = clap::App::new(env!("CARGO_PKG_NAME"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -49,13 +52,17 @@ fn main() {
         .get_matches();
 
     if matches.is_present("announce") {
-        match features::announce() {
-            Ok(_) => info!("An announcement is complete"),
+        info!("Start announcement");
+
+        match features::announce(&features::AnnouncementCriteria::new(Local::now())) {
+            Ok(_) => info!("Announcement completed"),
             Err(e) => error!("{}", e),
         };
     } else if matches.is_present("listen") {
+        info!("Start to listen timelines");
+
         match features::attach() {
-            Ok(_) => info!("Timeline listening is complete"),
+            Ok(_) => info!("Timeline listening completed"),
             Err(e) => error!("{}", e),
         }
     }

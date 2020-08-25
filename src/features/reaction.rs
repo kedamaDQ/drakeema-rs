@@ -37,6 +37,8 @@ pub fn attach() -> Result<()> {
     let tx_for_local = mpsc::Sender::clone(&tx);
     let me_for_local = Arc::clone(&me);
     thread::spawn(move || {
+        info!("Start to listen local timeline");
+
         let listener = LocalTimelineListener::new(&me_for_local, tx_for_local);
         if let Err(e) = listen(StreamType::PublicLocal, &listener) {
             error!("The thread for listening to the public local timeline is dead: {}", e);
@@ -48,6 +50,8 @@ pub fn attach() -> Result<()> {
     let tx_for_user = mpsc::Sender::clone(&tx);
     let me_for_user = Arc::clone(&me);
     thread::spawn(move || {
+        info!("Start to listen user timeline");
+
         let listener = UserTimelineListener::new(&conn_for_user, &me_for_user, tx_for_user);
         if let Err(e) = listen(StreamType::User, &listener) {
             error!("The thread for listening to the user timeline is dead: {}", e);
@@ -79,10 +83,13 @@ pub fn attach() -> Result<()> {
             Some(content) => content,
             None => continue,
         };
+        trace!("Status received: {:?}", status);
 
         let response: Option<String>;
 
         if keemasan.is_match(content) && oshiete.is_match(content) {
+            trace!("Match keywords for OSHIETE: {}", content);
+
             let mut r = reactions.iter()
                 .map(|i| i.reaction(&ReactionCriteria::new(chrono::Local::now(), content)))
                 .filter(|i| i.is_some())
@@ -93,10 +100,13 @@ pub fn attach() -> Result<()> {
             if r.is_empty() {
                 r = String::from("？");
             }
+
             response = Some(r);
         } else {
+            trace!("Not match keywords for OSHIETE: {}", content);
             response = keema.reaction(&ReactionCriteria::new(chrono::Local::now(), content));
         }
+        trace!("Reaction created: {:?}", response);
 
         if let Some(response) = response {
             let response = emojis.emojify(
@@ -110,11 +120,11 @@ pub fn attach() -> Result<()> {
     
             match post.send() {
                 Ok(posted) => info!(
-                    "Posted: {}, {:#?}",
-                    posted.id(),
-                    posted.status().unwrap().content()
+                    "Reaction completed: status: {:?}: mention: {}",
+                    posted.status().unwrap().content(),
+                    status.account().acct(),
                 ),
-                Err(e) => error!("Can't send status: {}", e),
+                Err(e) => error!("Can't send reply to {}: {}", status.account().acct(), e),
             };
         }
     }
@@ -134,11 +144,12 @@ fn listen(
             Ok(_) => {
                 if retry != 0 {
                     streaming::get(&conn, stream_type.clone()).send()?;
+                    info!("Timeline listening recovered: retry: {}", retry);
                 }
             },
             Err(e) => {
                 retry += 1;
-                error!("{} timeline listener returns an error: {}, retry: {}", stream_type, e, retry);
+                warn!("Timeline listener returns an error: {}, timeline: {}, retry: {}", e, stream_type, retry);
             }
         };
     }

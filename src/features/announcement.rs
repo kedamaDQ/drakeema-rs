@@ -1,4 +1,3 @@
-use chrono::Local;
 use mastors::{
 	Connection,
 	api::v1::statuses,
@@ -21,7 +20,7 @@ use super::{
 	AnnouncementCriteria,
 };
 
-pub fn announce() -> Result<()> {
+pub fn announce(criteria: &AnnouncementCriteria) -> Result<()> {
 	let monsters = Monsters::load()?;
 	let periodic_contents = PeriodicContents::load()?;
 	let weekly_contents = WeeklyContents::load()?;
@@ -37,7 +36,7 @@ pub fn announce() -> Result<()> {
 		&jashin,
 		&weekly_activity,
 	];
-	let criteria = AnnouncementCriteria::new(Local::now());
+	info!("Start announcement: {:?}", criteria);
 
 	let text = contents.iter()
 		.map(|c| c.announcement(&criteria))
@@ -48,9 +47,12 @@ pub fn announce() -> Result<()> {
 
 	if !text.is_empty() {
 		let conn = Connection::from_file(crate::ENV_FILE)?;
+		let announcement = Emojis::load(&conn)?.emojify(text);
+		info!("Found announcement: {}", announcement);
+
 		statuses::post(
 			&conn,
-			Emojis::load(&conn)?.emojify(text)
+			announcement,
 		).send()?;
 	}
 

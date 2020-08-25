@@ -19,6 +19,8 @@ pub struct MonthlyContents {
 
 impl MonthlyContents {
 	pub fn load() -> Result<Self> {
+		info!("Initialize MonthlyContents");
+
 		serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -53,6 +55,8 @@ impl MonthlyContents {
 
 impl Announcement for MonthlyContents {
 	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+		trace!("Start to announce about monthly contents: {:?}", criteria);
+
 		let contents = [
 			self.contents_to_end(&criteria.at()),
 			self.contents_to_start(&criteria.at()),
@@ -63,8 +67,10 @@ impl Announcement for MonthlyContents {
 		.join("\n");
 
 		if contents.is_empty() {
+			trace!("Nothing to announce about monthly contents: {:?}", criteria);
 			None
 		} else {
+			trace!("Found announcement for monthly contents: criteria: {:?}, announcement: {}", criteria, contents);
 			Some(contents)
 		}
 	}

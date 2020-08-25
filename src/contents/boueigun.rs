@@ -20,6 +20,8 @@ pub struct Boueigun<'a> {
 
 impl<'a> Boueigun<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
+		info!("Initialize Boueigun");
+
 		let inner: BoueigunJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -72,15 +74,20 @@ impl<'a> Boueigun<'a> {
 
 impl<'a> Reaction for Boueigun<'a> {
 	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		trace!("Start to reaction about boueigun: {:?}", criteria);
+
 		if self.nickname_regex.is_match(criteria.text()) {
 			let info = self.current_status(criteria.at());
-			Some(self.information
+			let reaction = self.information
 				.replace("__CURRENT_MONSTER__", info.current.display())
 				.replace("__RESISTANCES__", info.current.resistances().display(None::<Vec<String>>).as_str())
 				.replace("__NEXT_MONSTER__", info.next.display())
-				.replace("__REMAIN__", info.remain.to_string().as_str())
-			)
+				.replace("__REMAIN__", info.remain.to_string().as_str());
+
+			trace!("Found reaction about boueigun: criteria: {:?}, reaction: {}", criteria, reaction);
+			Some(reaction)
 		} else {
+			trace!("Nothing reaction about boueigun: {:?}", criteria);
 			None
 		}
 	}
