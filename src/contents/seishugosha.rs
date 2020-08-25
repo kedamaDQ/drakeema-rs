@@ -91,23 +91,10 @@ impl<'a> Reaction for Seishugosha<'a> {
 		if self.is_match(criteria.text()) {
 			let reaction = self.announcement(&AnnouncementCriteria::new(criteria.at()));
 			trace!("Found reaction about seishugosha: criteria: {:?}, reaction: {:?}", criteria, reaction);
-			return reaction
-		}
-
-		let informations = self.monsters.iter()
-			.filter(|m| m.is_match(criteria.text()))
-			.map(|m| {
-				self.information.clone()
-					.replace("__NAME__", m.official_name())
-					.replace("__LEVEL__", self.level_name(criteria.at(), m.offset))
-					.replace("__RESISTANCES__", m.resistances().display(None::<Vec<String>>).as_str())
-			})
-			.collect::<Vec<String>>();
-		
-		if informations.is_empty() {
-			None
+			reaction
 		} else {
-			Some(informations.join("\n"))
+			trace!("Nothing reaction about seishugosha: {:?}", criteria);
+			None
 		}
 	}
 }
