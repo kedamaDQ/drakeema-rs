@@ -29,13 +29,15 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 	type Error = crate::Error;
 
 	fn update(&self, status: &Status) -> Result<(), Self::Error> {
+		trace!("Receive update: {:?}", status);
+
 		if status.account() == self.me {
 			info!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
 		}
 
 		if is_overlapped_at_local_and_home(status) {
-			info!("Skip update: Status overlapped at local and home: {}", status.id());
+			trace!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
 		self.tx.send(status.clone()).map_err(|e| crate::Error::SendStatusMessageError(Box::new(e)))

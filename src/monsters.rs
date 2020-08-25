@@ -22,8 +22,12 @@ pub struct Monsters {
 	inner: HashMap<String, Monster>,
 }
 
+const EXTENSION: &str = "json";
+
 impl Monsters {
 	pub fn load() -> Result<Self> {
+		info!("Initialize Monsters");
+
 		let monsters_json: MonstersJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -35,12 +39,13 @@ impl Monsters {
 			.filter_map(|dir_entry| {
     			let dir_entry = dir_entry.ok()?;
     			if dir_entry.file_type().ok()?.is_file() &&
-    				dir_entry.path().extension()? == "json" {
+    				dir_entry.path().extension()? == EXTENSION {
     					Some(dir_entry.path())
     			} else {
     				None
     			}
-    		});
+			});
+		trace!("Found monster datas: {:?}", files);
     	
     	for file in files {
     		let m: Monster = serde_json::from_reader(
@@ -63,6 +68,7 @@ impl Monsters {
 
 impl Reaction for Monsters {
 	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		trace!("Start Reaction about monsters");
 		let reaction = self.iter()
 			.filter(|(_, m)| {
 				!self.ignore_categories.contains(&m.category().to_owned()) &&
@@ -79,12 +85,15 @@ impl Reaction for Monsters {
 						.replace("__RESISTANCES__", &resistances)
 				}
 			})
-			.collect::<Vec<String>>();
+			.collect::<Vec<String>>()
+			.join("\n");
 		
 		if reaction.is_empty() {
+			trace!("Nothing reaction about monsters: {:?}", criteria);
 			None
 		} else {
-			Some(reaction.join("\n"))
+			info!("Found reaction about monsters: {:?}, {}", criteria, reaction);
+			Some(reaction)
 		}
 	}
 }

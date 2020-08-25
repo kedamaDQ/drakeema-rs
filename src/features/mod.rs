@@ -10,6 +10,7 @@ pub trait Announcement {
 	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String>;
 }
 
+#[derive(Debug, Clone)]
 pub struct AnnouncementCriteria {
 	at: DateTime<Local>,
 }
@@ -30,6 +31,7 @@ pub trait Reaction {
 	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String>;
 }
 
+#[derive(Debug, Clone)]
 pub struct ReactionCriteria {
 	at: DateTime<Local>,
 	text: String,

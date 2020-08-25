@@ -23,6 +23,7 @@ pub struct Emojis<'a> {
 
 impl<'a> Emojis<'a> {
 	pub fn load(conn: &'a Connection) -> Result<Self> {
+		info!("Initialize Emojis");
 		let config: EmojiConfig = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -52,12 +53,15 @@ impl<'a> Emojis<'a> {
 			String::new()
 		} else {
 			let shortcode = self.inner.remove(self.rand.gen::<usize>() % self.inner.len());
+			trace!("Consumes an emoji: {}, remains: {}", shortcode, self.inner.len());
 			String::from(":") + shortcode.as_str() + ":"
 		}
 	}
 
 	pub fn emojify(&mut self, text: impl Into<String>) -> String {
 		let mut text = text.into();
+		trace!("Start emojify: {}", text);
+
 		let placeholder = self.placeholder.clone();
 		while text.find(placeholder.as_str()).is_some() {
 			text = text.replacen(placeholder.as_str(), self.get().as_str(), 1);
@@ -66,10 +70,13 @@ impl<'a> Emojis<'a> {
 	}
 
 	fn refresh(&mut self) {
+		info!("Start refresh Emojis: inner.len: {}, cache.len: {}", self.len(), self.cache.len());
+
 		match custom_emojis::get(self.conn).send() {
 			Ok(ce) => {
 				self.inner = Self::build_emojis(&self.re, &ce);
 				self.cache = Self::build_emojis(&self.re, &ce);
+				info!("Emojis refresh completed: remains: {}", self.inner.len())
 			},
 			Err(e) => {
 				error!("Can't get latest custom emojis: {}", e);

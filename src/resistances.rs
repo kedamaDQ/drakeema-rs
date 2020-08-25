@@ -128,6 +128,8 @@ impl Resistances {
 	pub fn join(&self, other: &Self) -> Self {
 		use std::collections::HashSet;
 
+		trace!("Resistances: self: {:?}, other: {:?}", self.inner, other.inner);
+
 		if self.len() != other.len() && self.len() != 1 && other.len() != 1 {
 			panic!("Cannot join Resistances: self.len: {}, other.len: {}", self.len(), other.len());
 		}
