@@ -26,6 +26,8 @@ pub struct Jashin<'a> {
 
 impl<'a> Jashin<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
+		info!("Initialize Jashin");
+
     	let mut inner: JashinJson = serde_json::from_reader(
     		BufReader::new(File::open(DATA)?)
 		)
@@ -48,42 +50,50 @@ impl<'a> Announcement for Jashin<'a> {
 	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		use std::ops::Add;
 
+		trace!("Start to announce about jashin: {:?}", criteria);
+
 		let title_today = self.title(criteria.at());
 		let title_tomorrow = self.title(criteria.at().add(Duration::hours(24)));
 		let title_yesterday = self.title(criteria.at().add(Duration::hours(-24)));
 
-		if title_today != title_yesterday {
+		let announcement = if title_today != title_yesterday {
 			// Date is start date of the period
-			Some(self.announcement_at_start
+			self.announcement_at_start
 				.replace("__TITLE__", title_today.display_title())
 				.replace("__MONSTERS__", title_today.display_monsters().as_str())
 				.replace("__RESISTANCES__", title_today.display_resistances(Some(&self.area_names)).as_str())
-			)
 		} else if title_today != title_tomorrow {
 			// Date is end date of period
-			Some(self.announcement_at_end
+			self.announcement_at_end
 				.replace("__TITLE1__", title_today.display_title())
 				.replace("__TITLE2__", title_tomorrow.display_title())
-			)
 		} else {
 			// Date is duaring the period
-			Some(self.announcement
+			self.announcement
 				.replace("__TITLE__", title_today.display_title())
-			)
-		}
+		};
+
+		trace!("Found announcement about jashin: {}", announcement);
+
+		Some(announcement)
 	}
 }
 
 impl<'a> Reaction for Jashin<'a> {
 	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		trace!("Start to reaction about jashin: {:?}", criteria);
+
 		if self.nickname_regex.is_match(criteria.text()) {
 			let title = self.title(criteria.at());
-			Some(self.information
+			let reaction = self.information
     			.replace("__TITLE__", title.display_title())
     			.replace("__MONSTERS__", title.display_monsters().as_str())
-    			.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str())
-			)
+				.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str());
+			
+			trace!("Found reaction about jashin: criteria: {:?}, reaction: {}", criteria, reaction);
+			Some(reaction)
 		} else {
+			trace!("Nothing reaction about jashin: {:?}", criteria);
 			None
 		}
 	}

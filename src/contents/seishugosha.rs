@@ -24,6 +24,8 @@ pub struct Seishugosha<'a> {
 
 impl<'a> Seishugosha<'a> {
 	pub fn load(monsters: &'a Monsters) -> Result<Self> {
+		info!("Initialize Seishugosha");
+
 		let inner: SeishugoshaJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -60,6 +62,8 @@ impl<'a> Seishugosha<'a> {
 
 impl<'a> Announcement for Seishugosha<'a> {
 	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+		trace!("Start to announce about seishugosha: {:?}", criteria);
+
 		let parts = self.monsters.iter()
 			.map(|m| {
 				self.announcement.parts.clone()
@@ -69,14 +73,25 @@ impl<'a> Announcement for Seishugosha<'a> {
 			.collect::<Vec<String>>()
 			.join("\n");
 
-		Some(self.announcement.start.clone() + &parts + &self.announcement.end)
+		let announcement = 
+			self.announcement.start.clone() +
+			&parts +
+			&self.announcement.end;
+		
+		trace!("Found announcement about seishugosha: criteria: {:?}, announcement: {}", criteria, announcement);
+
+		Some(announcement)
 	}
 }
 
 impl<'a> Reaction for Seishugosha<'a> {
 	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+		trace!("Start to reaction about seishugosha: {:?}", criteria);
+
 		if self.is_match(criteria.text()) {
-			return self.announcement(&AnnouncementCriteria::new(criteria.at()));
+			let reaction = self.announcement(&AnnouncementCriteria::new(criteria.at()));
+			trace!("Found reaction about seishugosha: criteria: {:?}, reaction: {:?}", criteria, reaction);
+			return reaction
 		}
 
 		let informations = self.monsters.iter()

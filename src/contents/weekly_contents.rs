@@ -21,6 +21,8 @@ use chrono::Datelike;
 
 impl WeeklyContents {
 	pub fn load() -> Result<Self> {
+		info!("Initialize WeeklyContents");
+
 		serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
@@ -52,6 +54,8 @@ impl WeeklyContents {
 
 impl Announcement for WeeklyContents {
 	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+		trace!("Start to announce about weekly contents: {:?}", criteria);
+
 		let announcement = vec![
 			self.contents_to_end(criteria.at()),
 			self.contents_to_start(criteria.at())
@@ -62,8 +66,10 @@ impl Announcement for WeeklyContents {
 		.join("\n");
 
 		if announcement.is_empty() {
+			trace!("Nothing to announce about weekly contents: {:?}", criteria);
 			None
 		} else {
+			trace!("Found announcement about weekly contents: criteria: {:?}, announcement: {}", criteria, announcement);
 			Some(announcement)
 		}
 	}

@@ -17,6 +17,8 @@ pub struct Keema {
 
 impl Keema {
     pub fn load() -> Result<Keema> {
+		info!("Initialize Keema");
+
 		Ok(Keema {
 			keywords: serde_json::from_reader(
 				BufReader::new(File::open(DATA)?)
@@ -30,7 +32,9 @@ impl Reaction for Keema {
 	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
 		use chrono::Timelike;
 
-		self.keywords.iter()
+		trace!("Start to reaction from Keema: {:?}", criteria);
+
+		let reaction = self.keywords.iter()
 			.find(|k| k.regex.is_match(criteria.text()))
 			.map(|k| {
 				k.reactions.get(
@@ -38,7 +42,10 @@ impl Reaction for Keema {
 				)
 				.unwrap()
 				.to_owned()
-			})
+			});
+		
+		trace!("Found reaction from keema: criteria: {:?}, reaction: {:?}", criteria, reaction);
+		reaction
 	}
 }
 
