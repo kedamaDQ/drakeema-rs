@@ -6,7 +6,7 @@ use crate::{
 	Error,
 	Result,
 };
-use crate::features::{ Announcement, AnnouncementCriteria };
+use crate::features::{ Announcer, AnnouncementCriteria };
 
 const DATA: &str = "drakeema-data/contents/periodic_contents.json";
 
@@ -57,8 +57,8 @@ impl PeriodicContents {
 	}
 }
 
-impl Announcement for PeriodicContents {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+impl Announcer for PeriodicContents {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		trace!("Start to announce about periodic contents: {:?}", criteria);
 
 		let contents = vec![
@@ -97,12 +97,12 @@ mod tests {
 	fn test_contents_at_day_is_exist() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 10).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "テンの日です！");
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 12).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "じゅうににちで12日です！");
@@ -112,7 +112,7 @@ mod tests {
 	fn test_contents_at_day_before_is_exist() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 9).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "明日はテンの日です！");
@@ -122,7 +122,7 @@ mod tests {
 	fn test_contents_at_day_and_at_day_before_are_exist() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 2, 9).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "プクの日です！\n明日はテンの日です！");
@@ -132,7 +132,7 @@ mod tests {
 	fn test_contents_is_nothing() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 2, 5).and_hms(12, 0, 0))
 		);
 		assert!(an.is_none());

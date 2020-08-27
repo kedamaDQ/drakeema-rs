@@ -1,10 +1,12 @@
 pub mod announcement;
 pub mod bot;
+pub mod response_status;
+pub mod response_notification;
 
 use chrono::{ DateTime, Local };
 
-pub trait Announcement {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String>;
+pub trait Announcer {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String>;
 }
 
 #[derive(Debug, Clone)]
@@ -24,19 +26,19 @@ impl AnnouncementCriteria {
 	}
 }
 
-pub trait Reaction {
-	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String>;
+pub trait Responder {
+	fn respond(&self, criteria: &ResponseCriteria) -> Option<String>;
 }
 
 #[derive(Debug, Clone)]
-pub struct ReactionCriteria {
+pub struct ResponseCriteria {
 	at: DateTime<Local>,
 	text: String,
 }
 
-impl ReactionCriteria {
+impl ResponseCriteria {
 	pub fn new(at: DateTime<Local>, text: impl Into<String>) -> Self {
-		ReactionCriteria {
+		ResponseCriteria {
 			at,
 			text: text.into(),
 		}

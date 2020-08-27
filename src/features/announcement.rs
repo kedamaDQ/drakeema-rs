@@ -16,7 +16,7 @@ use crate::contents::{
 	WeeklyContents,
 };
 use super::{
-	Announcement,
+	Announcer,
 	AnnouncementCriteria,
 };
 
@@ -28,7 +28,7 @@ pub fn announce(criteria: &AnnouncementCriteria) -> Result<()> {
 	let seishugosha = Seishugosha::load(&monsters)?;
 	let jashin = Jashin::load(&monsters)?;
 	let weekly_activity = WeeklyActivity::load()?;
-	let contents: Vec<&dyn Announcement> = vec![
+	let contents: Vec<&dyn Announcer> = vec![
 		&periodic_contents,
 		&weekly_contents,
 		&monthly_contents,
@@ -39,7 +39,7 @@ pub fn announce(criteria: &AnnouncementCriteria) -> Result<()> {
 	info!("Start announcement: {:?}", criteria);
 
 	let text = contents.iter()
-		.map(|c| c.announcement(&criteria))
+		.map(|c| c.announce(&criteria))
 		.filter(|c| c.is_some())
 		.map(|c| c.unwrap())
 		.collect::<Vec<String>>()

@@ -5,7 +5,7 @@ use crate::{
 	Error,
 	Result,
 };
-use crate::features::{ Reaction, ReactionCriteria };
+use crate::features::{ Responder, ResponseCriteria };
 use crate::utils::transform_string_to_regex;
 
 const DATA: &str = "drakeema-data/contents/keema.json";
@@ -28,24 +28,24 @@ impl Keema {
     }
 }
 
-impl Reaction for Keema {
-	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+impl Responder for Keema {
+	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
 		use chrono::Timelike;
 
-		trace!("Start to reaction from Keema: {:?}", criteria);
+		trace!("Start to response from Keema: {:?}", criteria);
 
-		let reaction = self.keywords.iter()
+		let response = self.keywords.iter()
 			.find(|k| k.regex.is_match(criteria.text()))
 			.map(|k| {
-				k.reactions.get(
-					criteria.at().second() as usize % k.reactions.len()
+				k.responses.get(
+					criteria.at().second() as usize % k.responses.len()
 				)
 				.unwrap()
 				.to_owned()
 			});
 		
-		trace!("Found reaction from keema: criteria: {:?}, reaction: {:?}", criteria, reaction);
-		reaction
+		trace!("Found response from keema: criteria: {:?}, response: {:?}", criteria, response);
+		response
 	}
 }
 
@@ -53,7 +53,7 @@ impl Reaction for Keema {
 struct Keyword {
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	regex: regex::Regex,
-	reactions: Vec<String>,
+	responses: Vec<String>,
 }
 
 #[cfg(test)]
@@ -64,13 +64,13 @@ mod tests {
 	#[test]
 	fn test_is_match() {
 		let keema = data();
-		assert!(keema.reaction(&ReactionCriteria::new(Local::now(), "簡単なこと")).is_some());
+		assert!(keema.respond(&ResponseCriteria::new(Local::now(), "簡単なこと")).is_some());
 	}
 
 	#[test]
 	fn test_is_not_match() {
 		let keema = data();
-		assert!(keema.reaction(&ReactionCriteria::new(Local::now(), "あいうえお")).is_none());
+		assert!(keema.respond(&ResponseCriteria::new(Local::now(), "あいうえお")).is_none());
 	}
 
 	fn data() -> Keema {
@@ -83,40 +83,40 @@ mod tests {
         [
         	{
         		"regex": "(?:簡単|かんたん|カンタン)な(?:事|こと|コト)",
-        		"reactions": [
+        		"responses": [
         			":x_ripo02: :x_dame:\n:x_ku02: とりあえずばつくれつけん！\n:x_pu02: よくわかんないけど悲しい…",
         			":x_gyousha: 簡単なことですよ️❤"
         		]
         	},
         	{
         		"regex": "[へヘﾍ][えエｴぇェｪ][ー〜]+[!！]*\\s*[いイｲ]{2}[ねネﾈ]",
-        		"reactions": [
+        		"responses": [
         			":x_ku02: ……ばくれちゅわ。",
         			":x_ripo02: :x_dame:"
         		]
         	},
         	{
         		"regex": "[欲ほ]しいな[あぁー〜]",
-        		"reactions": [
+        		"responses": [
         			":x_gyousha: お呼びですか？",
         			":x_exkun: でも全財産は1万7000ゴールド……"
         		]
         	},
         	{
         		"regex": "ばくれちゅ[わは]",
-        		"reactions": [
+        		"responses": [
         			":x_ku01: ばくれちゅわ！"
         		]
         	},
         	{
         		"regex": "(?:グローバルスター|ぐろーばるすたー)",
-        		"reactions": [
+        		"responses": [
         			":x_ripo01: 呼んだ？"
         		]
         	},
         	{
         		"regex": "(?:しめ|シメ|ｼﾒ)(?:さば|サバ|ｻﾊﾞ)",
-        		"reactions": [
+        		"responses": [
                   	":x_ku01: しめさばください！",
                   	":x_ku01: しめさばおいしい！",
                   	":x_ku01: しめさばは正義！"
@@ -124,38 +124,38 @@ mod tests {
         	},
         	{
         		"regex": "[うウｳ][ー〜]+[っッｯ]?(?:[くクｸ][っッｯ]){2,}",
-        		"reactions": [
+        		"responses": [
         			":c_porampan: ……うーくっくっくっ。"
         		]
         	},
         	{
         		"regex": "(?:ぺったんこ|ペッタンコ|ﾍﾟｯﾀﾝｺ)",
-        		"reactions": [
+        		"responses": [
                   	":c_anlucea: …………なにか言ったかしら💢",
                   	":c_anlucea: …………ぺったんこじゃないもん。"
         		]
         	},
         	{
         		"regex": "(?:でこ|デコ|ﾃﾞｺ)[っッｯ](?:ぱち|パチ|ﾊﾟﾁ)",
-        		"reactions": [
+        		"responses": [
                   	":c_anlucea: ‼️"
         		]
         	},
         	{
         		"regex": "[見み][付つっ]け(?:た|まし|ちゃ|てし)",
-        		"reactions": [
+        		"responses": [
                   	"いやー　さがしましたよ。"
         		]
         	},
         	{
         		"regex": "[捨す]て(?:ち|よう|る|て)",
-        		"reactions": [
+        		"responses": [
         			"それを捨てるなんてとんでもない！"
         		]
         	},
         	{
         		"regex": "[死し]ん(?:だ|でし|じゃっ)",
-        		"reactions": [
+        		"responses": [
                   	"しんでしまうとは　なにごとだ！",
                   	"しんでしまうとは　なんと　いなかものじゃ！",
                   	"へんじがない　ただのしかばねの場合がある。"
@@ -163,7 +163,7 @@ mod tests {
         	},
         	{
         		"regex": "(?:ルドマン|るどまん|ﾙﾄﾞﾏﾝ)",
-        		"reactions": [
+        		"responses": [
                   	"なんと　この私が　好きと申すか！？\n\n///"
         		]
         	}
