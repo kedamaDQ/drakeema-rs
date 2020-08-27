@@ -46,8 +46,9 @@ pub fn announce(criteria: &AnnouncementCriteria) -> Result<()> {
 		.join("\n\n");
 
 	if !text.is_empty() {
+		let date_string = criteria.at.format("[%Y-%m-%d]").to_string();
 		let conn = Connection::from_file(crate::ENV_FILE)?;
-		let announcement = Emojis::load(&conn)?.emojify(text);
+		let announcement = format!("{}\n\n{}", date_string, Emojis::load(&conn)?.emojify(text));
 		info!("Found announcement: {}", announcement);
 
 		statuses::post(
