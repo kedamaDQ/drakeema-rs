@@ -10,20 +10,27 @@ pub struct UserTimelineListener<'a> {
 	conn: &'a Connection,
 	me: &'a Account, 
 	tx: Sender<Status>,
+	follow_regex: &'a regex::Regex,
+	unfollow_regex: &'a regex::Regex,
 }
 
 impl<'a> UserTimelineListener<'a> {
-	pub fn new(conn: &'a Connection, me: &'a Account, tx: Sender<Status>) -> Self {
+	pub fn new(
+		conn: &'a Connection,
+		me: &'a Account,
+		tx: Sender<Status>,
+		follow_regex: &'a regex::Regex,
+		unfollow_regex: &'a regex::Regex,
+	) -> Self {
 		UserTimelineListener {
 			conn,
 			me,
 			tx,
+			follow_regex,
+			unfollow_regex,
 		}
 	}
 }
-
-const REGEX_FOLLOW_REQUEST: &str = r#"(?:フォロー|ふぉろー|follow)\s*して"#;
-const REGEX_UNFOLLOW_REQUEST: &str = r#"(?:フォロー|ふぉろー|follow)\s*(?:やめて|はずして|外して)"#;
 
 impl<'a> EventListener for UserTimelineListener<'a> {
 	type Error = crate::Error;
@@ -47,12 +54,12 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 		info!("Notification raceived: {}: {}", notification.notification_type(), notification.id());
 
 		if notification.is_mention() {
-			if is_match(REGEX_FOLLOW_REQUEST, notification.status()) {
+			if is_match(self.follow_regex, notification.status()) {
 				info!("Follow an account: {}", notification.account().id());
 				follow::post(
 					self.conn, notification.account().id()
 				).send()?;
-			} else if is_match(REGEX_UNFOLLOW_REQUEST, notification.status()) {
+			} else if is_match(self.unfollow_regex, notification.status()) {
 				info!("Unfollow an account: {}", notification.account().id());
 				unfollow::post(
 					self.conn, notification.account().id()
@@ -70,10 +77,8 @@ fn is_overlapped_at_local_and_home(status: &Status) -> bool {
     status.account().is_local() && status.visibility() == Visibility::Public
 }
 
-fn is_match(regex: &str, status: Option<&Status>) -> bool {
-	Regex::new(regex)
-		.unwrap()
-		.is_match(
+fn is_match(regex: &Regex, status: Option<&Status>) -> bool {
+		regex.is_match(
 			status
 				.map(|s| s.content().unwrap_or(""))
 				.unwrap_or("")

@@ -1,8 +1,5 @@
-mod announcement;
-mod reaction;
-
-pub use announcement::announce;
-pub use reaction::attach;
+pub mod announcement;
+pub mod bot;
 
 use chrono::{ DateTime, Local };
 

@@ -108,7 +108,7 @@ impl<'a> std::ops::Deref for Emojis<'a> {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct EmojiConfig {
+pub struct EmojiConfig {
 	placeholder: String,
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	category_regex: regex::Regex,

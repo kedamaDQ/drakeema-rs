@@ -12,7 +12,7 @@ mod tmp_file;
 mod utils;
 
 pub use monsters::Monsters;
-pub use emojis::Emojis;
+pub use emojis::{ Emojis, EmojiConfig };
 pub use error::{ Error, Result };
 
 use std::process;
@@ -54,14 +54,14 @@ fn main() {
     if matches.is_present("announce") {
         info!("Start announcement");
 
-        match features::announce(&features::AnnouncementCriteria::new(Local::now())) {
+        match features::announcement::announce(&features::AnnouncementCriteria::new(Local::now())) {
             Ok(_) => info!("Announcement completed"),
             Err(e) => error!("{}", e),
         };
     } else if matches.is_present("listen") {
         info!("Start to listen timelines");
 
-        match features::attach() {
+        match features::bot::attach() {
             Ok(_) => info!("Timeline listening completed"),
             Err(e) => error!("{}", e),
         }
