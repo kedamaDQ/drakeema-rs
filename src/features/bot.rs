@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::BufReader;
 use std::process;
 use std::sync::Arc;
 use std::sync::mpsc;
@@ -9,6 +11,7 @@ use mastors::{
 	api::v1::statuses,
 	api::v1::streaming,
 };
+use serde::Deserialize;
 use crate::{
     Emojis,
     Error,
@@ -19,17 +22,22 @@ use crate::{
         LocalTimelineListener,
         UserTimelineListener,
     },
+    utils::transform_string_to_regex,
 };
 use super::{
 	Reaction,
 	ReactionCriteria,
 };
 
-const KEEMASAN_REGEX: &str = "キーマさん";
-const OSHIETE_REGEX: &str = "(?:(?:おし|教)えて|(?:てぃーち|ティーチ|ﾃｨーﾁ)\\s*(?:みー|ミー|ﾐー))";
+const CONFIG: &str = "drakeema-data/drakeema.json";
 const MAX_RETRY: usize = 5;
 
 pub fn attach() -> Result<()> {
+    let config: Config = serde_json::from_reader(
+        BufReader::new(File::open(CONFIG)?)
+    )
+    .map_err(|e| Error::ParseJsonError(CONFIG.to_owned(), e))?;
+
 	let conn = Connection::from_file(crate::ENV_FILE)?;
     let me = Arc::new(accounts::verify_credentials::get(&conn).send()?);
     let (tx, rx) = mpsc::channel();
@@ -49,17 +57,22 @@ pub fn attach() -> Result<()> {
     let conn_for_user = Connection::from_file(crate::ENV_FILE)?;
     let tx_for_user = mpsc::Sender::clone(&tx);
     let me_for_user = Arc::clone(&me);
+    let follow_config = config.follows.clone();
     thread::spawn(move || {
         info!("Start to listen user timeline");
 
-        let listener = UserTimelineListener::new(&conn_for_user, &me_for_user, tx_for_user);
+        let listener = UserTimelineListener::new(
+            &conn_for_user,
+            &me_for_user,
+            tx_for_user,
+            &follow_config.follow_regex,
+            &follow_config.unfollow_regex,
+        );
         if let Err(e) = listen(StreamType::User, &listener) {
             error!("The thread for listening to the user timeline is dead: {}", e);
             process::exit(1);
         }
     });
-
-    use std::str::FromStr;
 
     let monsters = Monsters::load()?;
     let jashin = contents::Jashin::load(&monsters)?;
@@ -75,8 +88,6 @@ pub fn attach() -> Result<()> {
     ];
 
     let mut emojis = Emojis::load(&conn)?;
-    let keemasan = regex::Regex::from_str(KEEMASAN_REGEX)?;
-    let oshiete = regex::Regex::from_str(OSHIETE_REGEX)?;
 
     for status in rx {
         let content = match status.content() {
@@ -87,7 +98,7 @@ pub fn attach() -> Result<()> {
 
         let response: Option<String>;
 
-        if keemasan.is_match(content) && oshiete.is_match(content) {
+        if config.oshiete.keemasan_regex.is_match(content) && config.oshiete.oshiete_regex.is_match(content) {
             trace!("Match keywords for OSHIETE: {}", content);
 
             let mut r = reactions.iter()
@@ -155,3 +166,26 @@ fn listen(
     }
     Err(Error::LostStreamingConnectionError(stream_type, MAX_RETRY))
 }
+
+#[derive(Debug, Clone, Deserialize)]
+struct Config {
+    oshiete: OshieteConfig,
+    follows: FollowConfig,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct OshieteConfig {
+    #[serde(deserialize_with = "transform_string_to_regex")]
+    keemasan_regex: regex::Regex,
+    #[serde(deserialize_with = "transform_string_to_regex")]
+    oshiete_regex: regex::Regex,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct FollowConfig {
+    #[serde(deserialize_with = "transform_string_to_regex")]
+    follow_regex: regex::Regex,
+    #[serde(deserialize_with = "transform_string_to_regex")]
+    unfollow_regex: regex::Regex,
+}
+
