@@ -70,4 +70,9 @@ pub enum Error {
 		String,
 		std::io::Error,
 	),
+
+	#[error(display = "Rate limit exceeded: limit: {}", _0)]
+	ExceedRateLimitError(
+		usize
+	),
 }

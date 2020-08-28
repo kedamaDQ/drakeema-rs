@@ -13,7 +13,11 @@ use crate::{
 	contents,
 	utils::transform_string_to_regex,
 };
-use super::{ Responder, ResponseCriteria };
+use super::{
+	Responder,
+	ResponseCriteria,
+	rate_limit::RateLimit,
+};
 
 const DATA: &str = "drakeema-data/response_status.json";
 
@@ -23,6 +27,7 @@ pub struct Response<'a> {
 	responders: Vec<&'a dyn Responder>,
 	keema: &'a contents::Keema,
 	config: OshieteConfig,
+	rate_limit: RateLimit,
 }
 
 impl<'a> Response<'a> {
@@ -31,32 +36,34 @@ impl<'a> Response<'a> {
 		responders: Vec<&'a dyn Responder>,
 		keema: &'a contents::Keema
 	) -> Result<Self> {
-		let config = serde_json::from_reader(
+		let config: OshieteConfig = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
 		let emojis = Emojis::load(&conn)?;
+		let rate_limit = RateLimit::new(config.rate_limit);
 		Ok(Response {
 			conn,
 			emojis,
 			responders,
 			keema,
 			config,
+			rate_limit,
 		})
 	}
 
-	pub fn process(&mut self, status: &Status) {
+	pub fn process(&mut self, status: &Status) -> Result<()> {
         let content = match status.content() {
             Some(content) => content,
-            None => return,
+            None => return Ok(()),
         };
         trace!("Status received: {:?}", status);
 
         let response: Option<String>;
 
         if self.config.keemasan_regex.is_match(content) && self.config.oshiete_regex.is_match(content) {
-            trace!("Match keywords for OSHIETE: {}", content);
+            trace!("Match Keywords for OSHIETE: {}", content);
 
             let mut r = self.responders.iter()
                 .map(|i| i.respond(&ResponseCriteria::new(chrono::Local::now(), content)))
@@ -71,12 +78,18 @@ impl<'a> Response<'a> {
 
             response = Some(r);
         } else {
-            trace!("Not match keywords for OSHIETE: {}", content);
+            trace!("Do not match Keywords for OSHIETE: {}", content);
             response = self.keema.respond(&ResponseCriteria::new(chrono::Local::now(), content));
         }
         trace!("Reaction created: {:?}", response);
 
         if let Some(response) = response {
+			if let Err(e) = self.rate_limit.increment() {
+				error!("Respond rate limit exceeded: {}", e);
+				return Err(e);
+			}
+
+			info!("Reply to {}: status: {}", status.account().acct(), &response);
             let response = self.emojis.emojify(
                 String::from("@") + status.account().acct() + "\n\n" + response.as_str()
             );
@@ -88,13 +101,15 @@ impl<'a> Response<'a> {
     
             match post.send() {
                 Ok(posted) => info!(
-                    "Reaction completed: status: {:?}: mention: {}",
+                    "Response completed: status: {:?}: mention: {}",
                     posted.status().unwrap().content(),
                     status.account().acct(),
                 ),
                 Err(e) => error!("Can't send reply to {}: {}", status.account().acct(), e),
             };
-        }
+		}
+		
+		Ok(())
 	}
 
 }
@@ -104,6 +119,8 @@ struct OshieteConfig {
     #[serde(deserialize_with = "transform_string_to_regex")]
     keemasan_regex: regex::Regex,
     #[serde(deserialize_with = "transform_string_to_regex")]
-    oshiete_regex: regex::Regex,
+	oshiete_regex: regex::Regex,
+	
+	rate_limit: usize,
 }
 

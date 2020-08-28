@@ -77,9 +77,12 @@ pub fn attach() -> Result<()> {
     let mut response_notification = response_notification::Response::load(&conn)?;
 
     for message in rx {
-        match message {
-            Message::Status(status) => &response_status.process(&status),
-            Message::Notification(notification) => &response_notification.process(&notification),
+        if let Err(e) = match message {
+            Message::Status(status) => response_status.process(&status),
+            Message::Notification(notification) => response_notification.process(&notification),
+        } {
+            error!("Emergency stop: {}", e);
+            process::exit(9);
         };
     }
 

@@ -1,5 +1,6 @@
 pub mod announcement;
 pub mod bot;
+pub mod rate_limit;
 pub mod response_status;
 pub mod response_notification;
 
