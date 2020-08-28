@@ -26,6 +26,12 @@ impl<'a> EventListener for LocalTimelineListener<'a> {
 			info!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
 		}
+
+		if status.mentions().iter().any(|m| m.acct() == self.me.acct()) {
+			info!("Skip update: Status mentioned to myself: {}", status.id());
+			return Ok(())
+		}
+
 		self.tx.send(Message::Status(status.clone())).map_err(|e| crate::Error::SendMessageError(Box::new(e)))
 	}
 }
