@@ -18,8 +18,6 @@ pub use error::{ Error, Result };
 use std::process;
 use chrono::Local;
 
-pub const ENV_FILE: &str = ".env.test.st";
-
 fn main() {
     env_logger::init();
 

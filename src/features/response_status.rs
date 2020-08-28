@@ -145,7 +145,7 @@ mod tests {
 
 	#[test]
 	fn test_is_ignore() {
-		let conn = Connection::from_file(crate::ENV_FILE).unwrap();
+		let conn = Connection::new().unwrap();
 		let keema = contents::keema::tests::data();
 		let resp = data(&conn, vec![], &keema);
 

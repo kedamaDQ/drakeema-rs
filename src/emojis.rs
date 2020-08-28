@@ -120,7 +120,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_supply_emoji_forever() {
-		let conn = Connection::from_file(crate::ENV_FILE).unwrap();
+		let conn = Connection::new().unwrap();
 		let mut emojis = data(&conn);
 		let blank = String::new();
 		for _i in 0 .. 500 {
@@ -130,7 +130,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_category_filtering() {
-		let conn = Connection::from_file(crate::ENV_FILE).unwrap();
+		let conn = Connection::new().unwrap();
 		let emojis = data(&conn);
 		let emojis_orig: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
 

@@ -28,7 +28,7 @@ use super::{
 const MAX_RETRY: usize = 5;
 
 pub fn attach() -> Result<()> {
-	let conn = Connection::from_file(crate::ENV_FILE)?;
+	let conn = Connection::new()?;
     let me = Arc::new(accounts::verify_credentials::get(&conn).send()?);
     let (tx, rx) = mpsc::channel();
 
@@ -94,7 +94,7 @@ fn listen(
     stream_type: StreamType,
     listener: &impl EventListener,
 ) -> Result<()> {
-    let conn = Connection::from_file(crate::ENV_FILE)?;
+    let conn = Connection::new()?;
     let mut stream = streaming::get(&conn, stream_type.clone()).send()?;
     let mut retry = 0;
     while retry < MAX_RETRY {
