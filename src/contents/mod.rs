@@ -1,11 +1,11 @@
-mod boueigun;
-mod jashin;
-mod keema;
-mod monthly_contents;
-mod periodic_contents;
-mod seishugosha;
-mod weekly_activity;
-mod weekly_contents;
+pub(crate) mod boueigun;
+pub(crate) mod jashin;
+pub(crate) mod keema;
+pub(crate) mod monthly_contents;
+pub(crate) mod periodic_contents;
+pub(crate) mod seishugosha;
+pub(crate) mod weekly_activity;
+pub(crate) mod weekly_contents;
 
 pub use boueigun::Boueigun;
 pub use jashin::Jashin;

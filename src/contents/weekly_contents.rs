@@ -91,7 +91,7 @@ pub struct WeeklyContent {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::Local;
 	use chrono::offset::TimeZone;
@@ -144,7 +144,7 @@ mod tests {
 		assert!(wc.contents_to_end(thursday).is_empty());
 	}
 
-	fn data() -> WeeklyContents {
+	pub(crate) fn data() -> WeeklyContents {
 		serde_json::from_str(DATA).unwrap()
 	}
 

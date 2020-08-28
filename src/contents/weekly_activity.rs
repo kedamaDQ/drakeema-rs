@@ -36,7 +36,7 @@ impl Announcer for WeeklyActivity {
 
 		use chrono::offset::TimeZone;
 
-		let conn = match Connection::from_file(crate::ENV_FILE) {
+		let conn = match Connection::new() {
 			Ok(conn) => conn,
 			Err(e) => {
 				error!("Failed to get the connection: {}", e);

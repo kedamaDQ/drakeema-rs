@@ -115,13 +115,13 @@ pub struct EmojiConfig {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 
 	#[test]
 	fn test_supply_emoji_forever() {
-		let conn = Connection::from_file(crate::ENV_FILE).unwrap();
-		let mut emojis = data(&conn);
+		let conn_dummy = Connection::from_file(".env.test").unwrap();
+		let mut emojis = data(&conn_dummy);
 		let blank = String::new();
 		for _i in 0 .. 500 {
 			assert_ne!(emojis.get(), blank);
@@ -130,8 +130,8 @@ mod tests {
 
 	#[test]
 	fn test_category_filtering() {
-		let conn = Connection::from_file(crate::ENV_FILE).unwrap();
-		let emojis = data(&conn);
+		let conn_dummy = Connection::from_file(".env.test").unwrap();
+		let emojis = data(&conn_dummy);
 		let emojis_orig: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
 
 		let monster_emojis = emojis_orig.iter()
@@ -144,7 +144,7 @@ mod tests {
 		assert_eq!(monster_emojis.len() + character_emojis.len(), emojis.len());
 	}
 
-	fn data(conn: &Connection) -> Emojis {
+	pub(crate) fn data(conn: &Connection) -> Emojis {
 		let config: EmojiConfig = serde_json::from_str(CONFIG).unwrap();
 		let ce: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
 		Emojis {

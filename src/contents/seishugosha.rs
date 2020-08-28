@@ -181,14 +181,14 @@ struct MonsterJson {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::offset::TimeZone;
 
 	#[test]
 	fn test_positive() {
-		let monsters = Monsters::load().unwrap();
-		let ssgs = load(&monsters);
+		let monsters = crate::monsters::tests::data();
+		let ssgs = data(&monsters);
 
 		assert_eq!(
 			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(6, 0, 0), 0),
@@ -219,8 +219,8 @@ mod tests {
 
 	#[test]
 	fn test_negative() {
-		let monsters = Monsters::load().unwrap();
-		let ssgs = load(&monsters);
+		let monsters = crate::monsters::tests::data();
+		let ssgs = data(&monsters);
 
 		assert_eq!(
 			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(6, 0, 0), 0),
@@ -255,7 +255,7 @@ mod tests {
 
 	}
 
-	fn load(monsters: &Monsters) -> Seishugosha {
+	pub(crate) fn data(monsters: &Monsters) -> Seishugosha {
 		let inner: SeishugoshaJson = serde_json::from_str(TEST_DATA).unwrap();
 		Seishugosha {
 			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters).unwrap(),

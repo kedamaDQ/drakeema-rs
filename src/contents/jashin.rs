@@ -343,13 +343,13 @@ struct TitleJson {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::offset::TimeZone;
 
 	#[test]
 	fn test_title() {
-		let monsters = Monsters::load().unwrap();
+		let monsters = crate::monsters::tests::data();
 		let jashin = data(&monsters);
 
 		// 1st title
@@ -422,7 +422,7 @@ mod tests {
 
 	#[test]
 	fn test_past_date() {
-		let monsters = Monsters::load().unwrap();
+		let monsters = crate::monsters::tests::data();
 		let jashin = data(&monsters);
 
 		// Edge of title before reference date
@@ -442,7 +442,7 @@ mod tests {
 		);
 	}
 
-	fn data(monsters: &Monsters) -> Jashin {
+	pub(crate) fn data(monsters: &Monsters) -> Jashin {
 		let mut inner: JashinJson = serde_json::from_str(TEST_DATA).unwrap();
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
