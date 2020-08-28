@@ -179,7 +179,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_current_positive() {
-		let mon = Monsters::load().unwrap();
+		let mon = crate::monsters::tests::data();
 		let bou = data(&mon);
 
 		assert_eq!(
@@ -211,7 +211,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_current_negative() {
-		let mon = Monsters::load().unwrap();
+		let mon = crate::monsters::tests::data();
 		let bou = data(&mon);
 
 		assert_eq!(

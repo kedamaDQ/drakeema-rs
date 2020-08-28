@@ -38,8 +38,8 @@ where
 			A: SeqAccess<'de>,
 		{
 			let mut vec = Vec::new();
-			while let Some(s) = seq.next_element()? {
-				vec.push(Regex::from_str(s).map_err(A::Error::custom)?);
+			while let Some(s) = seq.next_element::<String>()? {
+				vec.push(Regex::from_str(&s).map_err(A::Error::custom)?);
 			};
 			Ok(vec)
 		}

@@ -1,19 +1,19 @@
 #[macro_use]
 extern crate log;
 
-mod contents;
-mod emojis;
-mod error;
-mod features;
-mod listeners;
-mod monsters;
-mod resistances;
-mod tmp_file;
-mod utils;
+pub(crate) mod contents;
+pub(crate) mod emojis;
+pub(crate) mod error;
+pub(crate) mod features;
+pub(crate) mod listeners;
+pub(crate) mod monsters;
+pub(crate) mod resistances;
+pub(crate) mod tmp_file;
+pub(crate) mod utils;
 
-pub use monsters::Monsters;
-pub use emojis::{ Emojis, EmojiConfig };
-pub use error::{ Error, Result };
+pub(crate) use monsters::Monsters;
+pub(crate) use emojis::Emojis;
+pub(crate) use error::{ Error, Result };
 
 use std::process;
 use chrono::Local;

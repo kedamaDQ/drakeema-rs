@@ -148,7 +148,7 @@ impl Monster {
 	}
 
 	pub fn is_match(&self, text: impl AsRef<str>) -> bool {
-		self.nickname_regex.is_match(text.as_ref())
+		self.nickname_regex().is_match(text.as_ref())
 	}
 }
 
@@ -158,4 +158,13 @@ struct MonstersJson {
 	information_without_resistance: String,
 	area_names: HashMap<String, Vec<String>>,
 	ignore_categories: Vec<String>,
+}
+
+#[cfg(test)]
+pub(crate) mod tests {
+	use super::*;
+
+	pub(crate) fn data() -> Monsters {
+		Monsters::load().unwrap()
+	}
 }

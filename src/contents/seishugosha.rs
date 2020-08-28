@@ -187,7 +187,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_positive() {
-		let monsters = Monsters::load().unwrap();
+		let monsters = crate::monsters::tests::data();
 		let ssgs = data(&monsters);
 
 		assert_eq!(
@@ -219,7 +219,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_negative() {
-		let monsters = Monsters::load().unwrap();
+		let monsters = crate::monsters::tests::data();
 		let ssgs = data(&monsters);
 
 		assert_eq!(
