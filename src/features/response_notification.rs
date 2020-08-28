@@ -65,14 +65,14 @@ impl<'a> Response<'a> {
 			return Err(e);
 		}
 
-		let mut response_message = format!("@{}", notification.account().acct());
+		let response_message: &str;
 		let result = match fu {
 			FoUnfo::Follow => {
-				response_message = format!("{}\n\n{}", response_message ,&self.config.followed_message);
+				response_message = &self.config.followed_message;
 				follow::post(&self.conn, notification.account().id()).send()
 			},
 			FoUnfo::Unfollow => {
-				response_message = format!("{}\n\n{}", response_message ,&self.config.unfollowed_message);
+				response_message = &self.config.unfollowed_message;
 				unfollow::post(&self.conn, notification.account().id()).send()
 			},
 		};
@@ -90,11 +90,13 @@ impl<'a> Response<'a> {
 			}
 		}
 
+		info!("Send reply to: {} text: {}", notification.account().acct(), response_message);
+		let response_message = format!("@{}\n\n{}", notification.account().acct(), response_message);
 		match statuses::post(&self.conn, &response_message)
 			.in_reply_to_id(notification.status().unwrap().id())
 			.send()
 		{
-			Ok(_) => info!("Send reply: {}", &response_message),
+			Ok(_) => info!("Completed to send reply"),
 			Err(e) => error!("Failed to send reply: {}, error: {}", &response_message, e),
 		};
 		Ok(())
