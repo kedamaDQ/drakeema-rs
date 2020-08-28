@@ -115,7 +115,7 @@ pub struct EmojiConfig {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 
 	#[test]
@@ -144,7 +144,7 @@ mod tests {
 		assert_eq!(monster_emojis.len() + character_emojis.len(), emojis.len());
 	}
 
-	fn data(conn: &Connection) -> Emojis {
+	pub fn data(conn: &Connection) -> Emojis {
 		let config: EmojiConfig = serde_json::from_str(CONFIG).unwrap();
 		let ce: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
 		Emojis {

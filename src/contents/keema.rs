@@ -57,7 +57,7 @@ struct Keyword {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::Local;
 
@@ -73,7 +73,7 @@ mod tests {
 		assert!(keema.respond(&ResponseCriteria::new(Local::now(), "あいうえお")).is_none());
 	}
 
-	fn data() -> Keema {
+	pub fn data() -> Keema {
 		Keema {
 			keywords: serde_json::from_str(DATA).unwrap()
 		}

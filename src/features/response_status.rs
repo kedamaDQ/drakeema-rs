@@ -11,7 +11,10 @@ use crate::{
 	Error,
 	Result,
 	contents,
-	utils::transform_string_to_regex,
+	utils::{
+		transform_string_to_regex,
+		transform_vec_string_to_vec_regex,
+	},
 };
 use super::{
 	Responder,
@@ -26,7 +29,7 @@ pub struct Response<'a> {
 	emojis: Emojis<'a>, 
 	responders: Vec<&'a dyn Responder>,
 	keema: &'a contents::Keema,
-	config: OshieteConfig,
+	config: Config,
 	rate_limit: RateLimit,
 }
 
@@ -36,7 +39,7 @@ impl<'a> Response<'a> {
 		responders: Vec<&'a dyn Responder>,
 		keema: &'a contents::Keema
 	) -> Result<Self> {
-		let config: OshieteConfig = serde_json::from_reader(
+		let config: Config = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
@@ -60,9 +63,14 @@ impl<'a> Response<'a> {
         };
         trace!("Status received: {:?}", status);
 
+		if self.is_ignore(status.account().acct()) {
+			info!("Ignore status: acct: {}", status.account().acct());
+			return Ok(());
+		}
+
         let response: Option<String>;
 
-        if self.config.keemasan_regex.is_match(content) && self.config.oshiete_regex.is_match(content) {
+        if self.is_oshiete_keemasan(&content) {
             trace!("Match Keywords for OSHIETE: {}", content);
 
 			let rc = ResponseCriteria::new(chrono::Local::now(), content);
@@ -82,7 +90,7 @@ impl<'a> Response<'a> {
             trace!("Do not match Keywords for OSHIETE: {}", content);
             response = self.keema.respond(&ResponseCriteria::new(chrono::Local::now(), content));
         }
-        trace!("Reaction created: {:?}", response);
+        trace!("Response created: {:?}", response);
 
         if let Some(response) = response {
 			if let Err(e) = self.rate_limit.increment() {
@@ -109,15 +117,66 @@ impl<'a> Response<'a> {
 		Ok(())
 	}
 
+	fn is_ignore(&self, acct: &str) -> bool {
+		self.config.ignore_acct_regex.iter().any(|re| re.is_match(acct))
+	}
+
+	fn is_oshiete_keemasan(&self, text: &str) -> bool {
+		self.config.keemasan_regex.is_match(text) && self.config.oshiete_regex.is_match(text)
+	}
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct OshieteConfig {
+struct Config {
     #[serde(deserialize_with = "transform_string_to_regex")]
     keemasan_regex: regex::Regex,
     #[serde(deserialize_with = "transform_string_to_regex")]
 	oshiete_regex: regex::Regex,
 	
 	rate_limit: usize,
+
+	#[serde(deserialize_with = "transform_vec_string_to_vec_regex")]
+	ignore_acct_regex: Vec<regex::Regex>,
 }
 
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_is_ignore() {
+		let conn = Connection::from_file(crate::ENV_FILE).unwrap();
+		let keema = contents::keema::tests::data();
+		let resp = data(&conn, vec![], &keema);
+
+		assert!(resp.is_ignore("hoge@example.com"));
+		assert!(resp.is_ignore("hoge@fuga.com"));
+		assert!(resp.is_ignore("hoge@fuga.pya.hoge.foresdon.jp"));
+		assert!(!resp.is_ignore("kedama@foresdon.jp"));
+	}
+
+	fn data<'a>(conn: &'a Connection, responders: Vec<&'a dyn Responder>, keema: &'a contents::Keema) -> Response<'a> {
+		let config = serde_json::from_str::<Config>(DATA).unwrap();
+		Response {
+			conn,
+			emojis: crate::emojis::tests::data(conn),
+			responders,
+			keema,
+			rate_limit: RateLimit::new(config.rate_limit),
+			config,
+		}
+	}
+
+	const DATA: &str = r#"
+		{
+			"keemasan_regex": "キーマさん",
+			"oshiete_regex": "(?:(?:おし|教)えて|(?:てぃーち|ティーチ|ﾃｨーﾁ)\\s*(?:みー|ミー|ﾐー))",
+			"rate_limit": 20,
+			"ignore_acct_regex": [
+				"@example.com$",
+				"^hoge@fuga.com$",
+				"hoge.foresdon.jp$"
+			]
+		}
+	"#;
+}
