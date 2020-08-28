@@ -84,7 +84,7 @@ struct Content {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::offset::TimeZone;
 
@@ -128,7 +128,7 @@ mod tests {
 		assert!(an.is_none());
 	}
 
-	fn data() -> MonthlyContents {
+	pub(crate) fn data() -> MonthlyContents {
 		serde_json::from_str(DATA).unwrap()
 	}
 

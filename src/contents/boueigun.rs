@@ -173,14 +173,14 @@ struct MonsterJson {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::offset::TimeZone;
 
 	#[test]
 	fn test_current_positive() {
 		let mon = Monsters::load().unwrap();
-		let bou = load(&mon);
+		let bou = data(&mon);
 
 		assert_eq!(
 			bou.current_status(Local.ymd(2020, 6, 5).and_hms(15, 0, 0)).current.id,
@@ -212,7 +212,7 @@ mod tests {
 	#[test]
 	fn test_current_negative() {
 		let mon = Monsters::load().unwrap();
-		let bou = load(&mon);
+		let bou = data(&mon);
 
 		assert_eq!(
 			bou.current_status(Local.ymd(2020, 6, 5).and_hms(14, 59, 59)).current.id,
@@ -245,7 +245,7 @@ mod tests {
 
 	}
 
-	fn load(monsters: &Monsters) -> Boueigun {
+	pub(crate) fn data(monsters: &Monsters) -> Boueigun {
 		let inner: BoueigunJson = serde_json::from_str(DATA).unwrap();
 		let monsters = BoueigunMonsters::new(&inner.monsters, monsters).unwrap();
 		let total_duration = monsters.iter()

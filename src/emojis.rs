@@ -144,7 +144,7 @@ pub(crate) mod tests {
 		assert_eq!(monster_emojis.len() + character_emojis.len(), emojis.len());
 	}
 
-	pub fn data(conn: &Connection) -> Emojis {
+	pub(crate) fn data(conn: &Connection) -> Emojis {
 		let config: EmojiConfig = serde_json::from_str(CONFIG).unwrap();
 		let ce: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
 		Emojis {

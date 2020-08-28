@@ -343,7 +343,7 @@ struct TitleJson {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
 	use super::*;
 	use chrono::offset::TimeZone;
 
@@ -442,7 +442,7 @@ mod tests {
 		);
 	}
 
-	fn data(monsters: &Monsters) -> Jashin {
+	pub(crate) fn data(monsters: &Monsters) -> Jashin {
 		let mut inner: JashinJson = serde_json::from_str(TEST_DATA).unwrap();
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));

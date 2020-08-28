@@ -73,7 +73,7 @@ pub(crate) mod tests {
 		assert!(keema.respond(&ResponseCriteria::new(Local::now(), "あいうえお")).is_none());
 	}
 
-	pub fn data() -> Keema {
+	pub(crate) fn data() -> Keema {
 		Keema {
 			keywords: serde_json::from_str(DATA).unwrap()
 		}
