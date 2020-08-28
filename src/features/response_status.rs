@@ -65,8 +65,9 @@ impl<'a> Response<'a> {
         if self.config.keemasan_regex.is_match(content) && self.config.oshiete_regex.is_match(content) {
             trace!("Match Keywords for OSHIETE: {}", content);
 
+			let rc = ResponseCriteria::new(chrono::Local::now(), content);
             let mut r = self.responders.iter()
-                .map(|i| i.respond(&ResponseCriteria::new(chrono::Local::now(), content)))
+                .map(|i| i.respond(&rc))
                 .filter(|i| i.is_some())
                 .map(|i| i.unwrap())
                 .collect::<Vec<String>>()
