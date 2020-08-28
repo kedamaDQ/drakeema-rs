@@ -71,7 +71,7 @@ impl<'a> Response<'a> {
         let response: Option<String>;
 
         if self.is_oshiete_keemasan(&content) {
-            trace!("Match Keywords for OSHIETE: {}", content);
+            info!("Match Keywords for OSHIETE: {}", content);
 
 			let rc = ResponseCriteria::new(chrono::Local::now(), content);
             let mut r = self.responders.iter()
@@ -85,9 +85,20 @@ impl<'a> Response<'a> {
                 r = String::from("？");
             }
 
-            response = Some(r);
+			info!("Response for OSHIETE: {}", r);
+			response = Some(r);
+		} else if self.is_keemasan(&content) && self.is_healthcheck(content){
+			info!("Match keywords for healthcheck: {}", content);
+
+			use chrono::{
+				Timelike,
+				Local,
+			};
+
+			response = self.config.healthcheck_responses.get(
+				Local::now().second() as usize % self.config.healthcheck_responses.len()
+			).map(|r| r.to_owned());
         } else {
-            trace!("Do not match Keywords for OSHIETE: {}", content);
             response = self.keema.respond(&ResponseCriteria::new(chrono::Local::now(), content));
         }
         trace!("Response created: {:?}", response);
@@ -121,8 +132,20 @@ impl<'a> Response<'a> {
 		self.config.ignore_acct_regex.iter().any(|re| re.is_match(acct))
 	}
 
+	fn is_healthcheck(&self, text: &str) -> bool {
+		self.config.healthcheck_regex.is_match(text)
+	}
+
+	fn is_oshiete(&self, text: &str) -> bool {
+		self.config.oshiete_regex.is_match(text)
+	}
+
+	fn is_keemasan(&self, text: &str) -> bool {
+		self.config.keemasan_regex.is_match(text) 
+	}
+
 	fn is_oshiete_keemasan(&self, text: &str) -> bool {
-		self.config.keemasan_regex.is_match(text) && self.config.oshiete_regex.is_match(text)
+		self.is_oshiete(text) && self.is_keemasan(text)
 	}
 }
 
@@ -132,8 +155,11 @@ struct Config {
     keemasan_regex: regex::Regex,
     #[serde(deserialize_with = "transform_string_to_regex")]
 	oshiete_regex: regex::Regex,
+	#[serde(deserialize_with = "transform_string_to_regex")]
+	healthcheck_regex: regex::Regex,
 	
 	rate_limit: usize,
+	healthcheck_responses: Vec<String>,
 
 	#[serde(deserialize_with = "transform_vec_string_to_vec_regex")]
 	ignore_acct_regex: Vec<regex::Regex>,
@@ -172,6 +198,15 @@ mod tests {
 			"keemasan_regex": "キーマさん",
 			"oshiete_regex": "(?:(?:おし|教)えて|(?:てぃーち|ティーチ|ﾃｨーﾁ)\\s*(?:みー|ミー|ﾐー))",
 			"rate_limit": 20,
+			"healthcheck_regex": "(?:(?:元気|げんき|ゲンキ|ｹﾞﾝｷ)(?:!|！)*(?:？|\\?))",
+			"healthcheck_responses": [
+				"元気です！",
+				"元気な場合がある。",
+				":m_drakeema:",
+				":x_exkun:",
+				":m_drakee: :m_drakeema: :m_drakeemage: :m_drakeetaho:",
+				":d_sleep:"
+			],
 			"ignore_acct_regex": [
 				"@example.com$",
 				"^hoge@fuga.com$",
