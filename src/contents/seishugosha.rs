@@ -9,10 +9,10 @@ use crate::{
 	utils::transform_string_to_regex,
 };
 use crate::features::{
-	Announcement,
+	Announcer,
 	AnnouncementCriteria,
-	Reaction,
-	ReactionCriteria,
+	Responder,
+	ResponseCriteria,
 };
 
 const DATA: &str = "drakeema-data/contents/seishugosha.json";
@@ -60,8 +60,8 @@ impl<'a> Seishugosha<'a> {
 	}
 }
 
-impl<'a> Announcement for Seishugosha<'a> {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+impl<'a> Announcer for Seishugosha<'a> {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		trace!("Start to announce about seishugosha: {:?}", criteria);
 
 		let parts = self.monsters.iter()
@@ -84,12 +84,12 @@ impl<'a> Announcement for Seishugosha<'a> {
 	}
 }
 
-impl<'a> Reaction for Seishugosha<'a> {
-	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
+impl<'a> Responder for Seishugosha<'a> {
+	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
 		trace!("Start to reaction about seishugosha: {:?}", criteria);
 
 		if self.is_match(criteria.text()) {
-			let reaction = self.announcement(&AnnouncementCriteria::new(criteria.at()));
+			let reaction = self.announce(&AnnouncementCriteria::new(criteria.at()));
 			trace!("Found reaction about seishugosha: criteria: {:?}, reaction: {:?}", criteria, reaction);
 			reaction
 		} else {
@@ -159,7 +159,7 @@ impl<'a> std::ops::Deref for SeishugoshaMonster<'a> {
 pub struct SeishugoshaJson {
 	reference_date: DateTime<Local>,
 	level_names: Vec<String>,
-	announcement: AnnouncementJson,
+	announcement: AnnouncerJson,
 	information: String,
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	nickname_regex: regex::Regex,
@@ -167,7 +167,7 @@ pub struct SeishugoshaJson {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct AnnouncementJson {
+struct AnnouncerJson {
 	start: String,
 	parts: String,
 	end: String,

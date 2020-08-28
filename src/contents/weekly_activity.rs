@@ -9,7 +9,7 @@ use crate::{
 	Result,
 	tmp_file,
 };
-use crate::features::{ Announcement, AnnouncementCriteria };
+use crate::features::{ Announcer, AnnouncementCriteria };
 
 const DATA: &str = "drakeema-data/contents/weekly_activity.json";
 const TMP: &str = "weekly_activity.tmp";
@@ -30,8 +30,8 @@ impl WeeklyActivity {
 	}
 }
 
-impl Announcement for WeeklyActivity {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+impl Announcer for WeeklyActivity {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		trace!("Start to announce about weekly activity: {:?}", criteria);
 
 		use chrono::offset::TimeZone;

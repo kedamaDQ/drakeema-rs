@@ -42,9 +42,9 @@ pub enum Error {
 	),
 
 	#[error(display = "Failed to send Status to channel: {}", _0)]
-	SendStatusMessageError(
+	SendMessageError(
 		#[error(source, from)]
-		Box<std::sync::mpsc::SendError<mastors::entities::Status>>,
+		Box<std::sync::mpsc::SendError<crate::listeners::Message>>,
 	),
 
 	#[error(display = "Lost the streaming connection: timeline: {}, retry: {}", _0, _1)]

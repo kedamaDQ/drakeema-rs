@@ -6,7 +6,7 @@ use crate::{
 	Error,
 	Result,
 };
-use crate::features::{ Announcement, AnnouncementCriteria };
+use crate::features::{ Announcer, AnnouncementCriteria };
 
 const DATA: &str = "drakeema-data/contents/monthly_contents.json";
 
@@ -53,8 +53,8 @@ impl MonthlyContents {
 	}
 }
 
-impl Announcement for MonthlyContents {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+impl Announcer for MonthlyContents {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		trace!("Start to announce about monthly contents: {:?}", criteria);
 
 		let contents = [
@@ -92,12 +92,12 @@ mod tests {
 	fn test_contents_to_start_is_exist() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 1).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクル、不思議の魔塔は今日からです！");
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 15).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクルは今日からです！");
@@ -107,12 +107,12 @@ mod tests {
 	fn test_contents_to_end_is_exist() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 31).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクル、不思議の魔塔は今日までです！");
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 14).and_hms(12, 0, 0))
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクルは今日までです！");
@@ -122,7 +122,7 @@ mod tests {
 	fn test_contents_is_nothing() {
 		let pc = data();
 
-		let an = pc.announcement(
+		let an = pc.announce(
 			&AnnouncementCriteria::new(Local.ymd(2020, 8, 16).and_hms(12, 0, 0))
 		);
 		assert!(an.is_none());

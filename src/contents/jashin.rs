@@ -10,10 +10,10 @@ use crate::{
 	utils::transform_string_to_regex,
 };
 use crate::features::{
-	Announcement,
+	Announcer,
 	AnnouncementCriteria,
-	Reaction,
-	ReactionCriteria,
+	Responder,
+	ResponseCriteria,
 };
 
 const DATA: &str = "drakeema-data/contents/jashin.json";
@@ -46,8 +46,8 @@ impl<'a> Jashin<'a> {
 	}
 }
 
-impl<'a> Announcement for Jashin<'a> {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+impl<'a> Announcer for Jashin<'a> {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		use std::ops::Add;
 
 		trace!("Start to announce about jashin: {:?}", criteria);
@@ -79,21 +79,21 @@ impl<'a> Announcement for Jashin<'a> {
 	}
 }
 
-impl<'a> Reaction for Jashin<'a> {
-	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
-		trace!("Start to reaction about jashin: {:?}", criteria);
+impl<'a> Responder for Jashin<'a> {
+	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
+		trace!("Start to respond about jashin: {:?}", criteria);
 
 		if self.nickname_regex.is_match(criteria.text()) {
 			let title = self.title(criteria.at());
-			let reaction = self.information
+			let response = self.information
     			.replace("__TITLE__", title.display_title())
     			.replace("__MONSTERS__", title.display_monsters().as_str())
 				.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str());
 			
-			trace!("Found reaction about jashin: criteria: {:?}, reaction: {}", criteria, reaction);
-			Some(reaction)
+			trace!("Found response about jashin: criteria: {:?}, response: {}", criteria, response);
+			Some(response)
 		} else {
-			trace!("Nothing reaction about jashin: {:?}", criteria);
+			trace!("Nothing response about jashin: {:?}", criteria);
 			None
 		}
 	}

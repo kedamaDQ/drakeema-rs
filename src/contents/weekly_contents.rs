@@ -6,7 +6,7 @@ use crate::{
 	Error,
 	Result,
 };
-use crate::features::{ Announcement, AnnouncementCriteria };
+use crate::features::{ Announcer, AnnouncementCriteria };
 
 const DATA: &str = "drakeema-data/contents/weekly_contents.json";
 
@@ -52,8 +52,8 @@ impl WeeklyContents {
 	}
 }
 
-impl Announcement for WeeklyContents {
-	fn announcement(&self, criteria: &AnnouncementCriteria) -> Option<String> {
+impl Announcer for WeeklyContents {
+	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		trace!("Start to announce about weekly contents: {:?}", criteria);
 
 		let announcement = vec![

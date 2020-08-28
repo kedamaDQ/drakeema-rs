@@ -8,7 +8,7 @@ use crate::{
 	monsters::{ Monster, Monsters },
 	utils::transform_string_to_regex,
 };
-use crate::features::{ Reaction, ReactionCriteria };
+use crate::features::{ Responder, ResponseCriteria };
 
 const DATA: &str = "drakeema-data/contents/boueigun.json";
 
@@ -72,22 +72,22 @@ impl<'a> Boueigun<'a> {
 	}
 }
 
-impl<'a> Reaction for Boueigun<'a> {
-	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
-		trace!("Start to reaction about boueigun: {:?}", criteria);
+impl<'a> Responder for Boueigun<'a> {
+	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
+		trace!("Start to respond about boueigun: {:?}", criteria);
 
 		if self.nickname_regex.is_match(criteria.text()) {
 			let info = self.current_status(criteria.at());
-			let reaction = self.information
+			let response = self.information
 				.replace("__CURRENT_MONSTER__", info.current.display())
 				.replace("__RESISTANCES__", info.current.resistances().display(None::<Vec<String>>).as_str())
 				.replace("__NEXT_MONSTER__", info.next.display())
 				.replace("__REMAIN__", info.remain.to_string().as_str());
 
-			trace!("Found reaction about boueigun: criteria: {:?}, reaction: {}", criteria, reaction);
-			Some(reaction)
+			trace!("Found response about boueigun: criteria: {:?}, response: {}", criteria, response);
+			Some(response)
 		} else {
-			trace!("Nothing reaction about boueigun: {:?}", criteria);
+			trace!("Nothing response about boueigun: {:?}", criteria);
 			None
 		}
 	}

@@ -9,7 +9,7 @@ use crate::{
 	resistances::Resistances,
 	utils::transform_string_to_regex,
 };
-use crate::features::{ Reaction, ReactionCriteria };
+use crate::features::{ Responder, ResponseCriteria };
 
 const DATA: &str = "drakeema-data/contents/monsters.json";
 const DATA_DIR: &str = "drakeema-data/monsters";
@@ -66,9 +66,9 @@ impl Monsters {
 	}
 }
 
-impl Reaction for Monsters {
-	fn reaction(&self, criteria: &ReactionCriteria) -> Option<String> {
-		trace!("Start Reaction about monsters");
+impl Responder for Monsters {
+	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
+		trace!("Start Responder about monsters");
 		let reaction = self.iter()
 			.filter(|(_, m)| {
 				!self.ignore_categories.contains(&m.category().to_owned()) &&
