@@ -4,5 +4,5 @@ A bot for mastodon working at foresdon.jp.
 ## data
 [drakeema-data](https://github.com/kedamaDQ/drakeema-data.git)
 
-## Depends on
+## depends on
 [mastors](https://github.com/kedamaDQ/mastors.git)
