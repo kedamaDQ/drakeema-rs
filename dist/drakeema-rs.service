@@ -1,0 +1,15 @@
+[Unit]
+Description=drakeema-rs
+After=network.target
+
+[Service]
+Type=simple
+User=drakeema
+WorkingDirectory=/home/drakeema
+Environment="RUST_LOG=info"
+ExecStart=/home/drakeema/drakeema-rs --listen
+TimeoutSec=15
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
