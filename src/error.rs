@@ -75,4 +75,16 @@ pub enum Error {
 	ExceedRateLimitError(
 		usize
 	),
+
+	#[error(display = "HTTP request error: {}", _0)]
+	HttpRequestError(
+		#[error(source, from)]
+		reqwest::Error,
+	),
+
+	#[error(display = "Failed to parse feed: {}, {}", _0, _1)]
+	ParseFeedError(
+		String,
+		feed_rs::parser::ParseFeedError,
+	),
 }

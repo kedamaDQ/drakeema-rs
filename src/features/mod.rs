@@ -1,4 +1,5 @@
 pub(crate) mod announcement;
+pub(crate) mod announcement_feed;
 pub(crate) mod bot;
 pub(crate) mod rate_limit;
 pub(crate) mod response_status;
