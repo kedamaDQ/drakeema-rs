@@ -17,6 +17,7 @@ use crate::features::{
 
 const DATA: &str = "drakeema-data/contents/seishugosha.json";
 
+#[derive(Debug, Clone)]
 pub struct Seishugosha<'a> {
 	monsters: SeishugoshaMonsters<'a>,
 	inner: SeishugoshaJson,
@@ -107,6 +108,7 @@ impl<'a> std::ops::Deref for Seishugosha<'a> {
 	}
 }
 
+#[derive(Debug, Clone)]
 struct SeishugoshaMonsters<'a> {
 	inner: Vec<SeishugoshaMonster<'a>>,
 }
@@ -140,6 +142,8 @@ impl<'a> std::ops::Deref for SeishugoshaMonsters<'a> {
 		&self.inner
 	}
 }
+
+#[derive(Debug, Clone)]
 struct SeishugoshaMonster<'a> {
 	#[allow(unused)]
 	id: String,

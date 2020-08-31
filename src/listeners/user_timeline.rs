@@ -35,12 +35,12 @@ impl<'a> EventListener for UserTimelineListener<'a> {
 			trace!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
-		self.tx.send(Message::Status(status.clone())).map_err(|e| Error::SendMessageError(Box::new(e)))
+		self.tx.send(Message::Status(status.clone())).map_err(|e| Error::SendMessageForResponseError(Box::new(e)))
 	}
 
 	fn notification(&self, notification: &Notification) -> Result<(), Self::Error> {
 		info!("Notification raceived: {}: {}", notification.notification_type(), notification.id());
-		self.tx.send(Message::Notification(notification.clone())).map_err(|e| Error::SendMessageError(Box::new(e)))
+		self.tx.send(Message::Notification(notification.clone())).map_err(|e| Error::SendMessageForResponseError(Box::new(e)))
 	}
 }
 

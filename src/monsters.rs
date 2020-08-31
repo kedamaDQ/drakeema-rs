@@ -14,6 +14,7 @@ use crate::features::{ Responder, ResponseCriteria };
 const DATA: &str = "drakeema-data/contents/monsters.json";
 const DATA_DIR: &str = "drakeema-data/monsters";
 
+#[derive(Debug, Clone)]
 pub struct Monsters {
 	information: String,
 	information_without_resistance: String,

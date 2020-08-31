@@ -1,17 +1,10 @@
 use std::fs::File;
 use std::io::BufReader;
+use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
-use feed_rs::model::{
-	Entry,
-};
-use mastors::{
-	Connection,
-	api::v1::statuses,
-};
-use reqwest::blocking::{
-	Client,
-};
+use feed_rs::model::Entry;
+use reqwest::blocking::Client;
 use serde::Deserialize;
 use url::Url;
 use crate::{
@@ -20,27 +13,24 @@ use crate::{
 	tmp_file,
 	utils::transform_vec_string_to_vec_regex,
 };
-use super::{
-	AnnouncementCriteria,
-	Announcer,
-};
 
 const DATA: &str = "drakeema-data/announcement_feed.json";
 
 #[derive(Debug, Clone)]
-pub struct AnnouncementFeed<'a> {
-	conn: &'a Connection,
+pub struct FeedsAnnouncement {
+	tx: mpsc::Sender<String>,
 	client: Client,
 	feed_urls: Vec<FeedUrl>,
 	title_regex: Vec<regex::Regex>,
+	announce_interval_secs: u64,
 	post_interval_secs: u64,
 }
 
-impl<'a> AnnouncementFeed<'a> {
-	pub fn load(conn: &'a Connection) -> Result<Self> {
-		info!("Initializing AnnouncementFeed");
+impl FeedsAnnouncement {
+	pub fn load(tx: mpsc::Sender<String>) -> Result<Self> {
+		info!("Initializing FeedAnnouncement");
 
-		let json: AnnouncementFeedJson = serde_json::from_reader(
+		let json: FeedAnnouncementJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
@@ -54,23 +44,32 @@ impl<'a> AnnouncementFeed<'a> {
 			})
 			.collect::<Vec<FeedUrl>>();
 
-		Ok(AnnouncementFeed {
-			conn,
+		Ok(FeedsAnnouncement {
+			tx,
 			client,
 			feed_urls,
 			title_regex: json.title_regex,
+			announce_interval_secs: json.announce_interval_secs,
 			post_interval_secs: json.post_interval_secs,
 		})
 	}
 
-	pub fn announce(&self, criteria: &AnnouncementCriteria) -> Result<()> {
-		info!("Start to announce feeds");
-		for text in self.get()? {
-			info!("Announce: {}", text.replace("\n", ""));
-			statuses::post(self.conn, text).send()?;
-			thread::sleep(Duration::from_secs(self.post_interval_secs));
+	pub fn process(&self) {
+		loop {
+			match self.get() {
+				Ok(texts) => {
+					for text in texts {
+						info!("Announce {}", text.replace("\n", ""));
+						self.tx.send(text).expect("Failed to send message from FeedAnnouncement");
+						thread::sleep(Duration::from_secs(self.post_interval_secs));
+					}
+				},
+				Err(e) => {
+					error!("Failed to get feed: {}", e);
+				}
+			}
+			thread::sleep(Duration::from_secs(self.announce_interval_secs));
 		}
-		Ok(())
 	}
 
 	fn get(&self) -> Result<Vec<String>> {
@@ -147,10 +146,11 @@ mod tests {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct AnnouncementFeedJson {
+struct FeedAnnouncementJson {
 	feed_urls: Vec<Url>,
 	#[serde(deserialize_with = "transform_vec_string_to_vec_regex")]
 	title_regex: Vec<regex::Regex>,
+	announce_interval_secs: u64,
 	post_interval_secs: u64,
 }
 

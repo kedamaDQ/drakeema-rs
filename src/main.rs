@@ -11,12 +11,11 @@ pub(crate) mod resistances;
 pub(crate) mod tmp_file;
 pub(crate) mod utils;
 
-pub(crate) use monsters::Monsters;
 pub(crate) use emojis::Emojis;
 pub(crate) use error::{ Error, Result };
+pub(crate) use monsters::Monsters;
 
 use std::process;
-use chrono::Local;
 
 fn main() {
     env_logger::init();
@@ -28,38 +27,29 @@ fn main() {
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .arg(
-            clap::Arg::with_name("listen")
-                .short("l")
-                .long("listen")
+            clap::Arg::with_name("no-response")
+                .long("no-response")
                 .case_insensitive(false)
-                .help("Listen to some timelines and react to toots that contain some keywords")
+                .help("Do not resopnse to status on timelines")
 
         )
         .arg(
-            clap::Arg::with_name("announce")
-                .short("a")
-                .long("announce")
+            clap::Arg::with_name("no-announce")
+                .long("no-announce")
                 .case_insensitive(false)
-                .help("Announce information of some contents in Astoltia")
+                .help("Do not announce about contents in Astoltia and news from RSS feeds")
         )
         .group(
             clap::ArgGroup::with_name("mode")
-            .args(&["listen", "announce"])
-            .required(true)
+            .args(&["no-response", "no-announce"])
+            .required(false)
         )
         .get_matches();
 
-    if matches.is_present("announce") {
-        info!("Start announcement");
+    if !matches.is_present("no-announce") {
 
-        match features::announcement::announce(&features::AnnouncementCriteria::new(Local::now())) {
-            Ok(_) => info!("Announcement completed"),
-            Err(e) => error!("{}", e),
-        };
-    } else if matches.is_present("listen") {
-        info!("Start to listen timelines");
-
-        match features::bot::attach() {
+    } else if !matches.is_present("listen") {
+        match features::response::start() {
             Ok(_) => info!("Timeline listening completed"),
             Err(e) => error!("{}", e),
         }

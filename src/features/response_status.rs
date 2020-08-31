@@ -24,7 +24,7 @@ use super::{
 
 const DATA: &str = "drakeema-data/response_status.json";
 
-pub struct Response<'a> {
+pub struct StatusResponse<'a> {
 	conn: &'a Connection,
 	emojis: Emojis<'a>, 
 	responders: Vec<&'a dyn Responder>,
@@ -33,7 +33,7 @@ pub struct Response<'a> {
 	rate_limit: RateLimit,
 }
 
-impl<'a> Response<'a> {
+impl<'a> StatusResponse<'a> {
 	pub fn load(
 		conn: &'a Connection,
 		responders: Vec<&'a dyn Responder>,
@@ -46,7 +46,7 @@ impl<'a> Response<'a> {
 
 		let emojis = Emojis::load(&conn)?;
 		let rate_limit = RateLimit::new(config.rate_limit);
-		Ok(Response {
+		Ok(StatusResponse {
 			conn,
 			emojis,
 			responders,
@@ -85,7 +85,7 @@ impl<'a> Response<'a> {
                 r = String::from("？");
             }
 
-			info!("Response for OSHIETE: {}", r);
+			info!("StatusResponse for OSHIETE: {}", r);
 			response = Some(r);
 		} else if self.is_keemasan(&content) && self.is_healthcheck(content){
 			info!("Match keywords for healthcheck: {}", content);
@@ -101,7 +101,7 @@ impl<'a> Response<'a> {
         } else {
             response = self.keema.respond(&ResponseCriteria::new(chrono::Local::now(), content));
         }
-        trace!("Response created: {:?}", response);
+        trace!("StatusResponse created: {:?}", response);
 
         if let Some(response) = response {
 			if let Err(e) = self.rate_limit.increment() {
@@ -120,7 +120,7 @@ impl<'a> Response<'a> {
             }
     
             match post.send() {
-                Ok(_) => info!("Response completed"),
+                Ok(_) => info!("StatusResponse completed"),
                 Err(e) => error!("Failed to send reply to {}: {}", status.account().acct(), e),
             };
 		}
@@ -181,9 +181,9 @@ mod tests {
 		assert!(!resp.is_ignore("kedama@foresdon.jp"));
 	}
 
-	fn data<'a>(conn: &'a Connection, responders: Vec<&'a dyn Responder>, keema: &'a contents::Keema) -> Response<'a> {
+	fn data<'a>(conn: &'a Connection, responders: Vec<&'a dyn Responder>, keema: &'a contents::Keema) -> StatusResponse<'a> {
 		let config = serde_json::from_str::<Config>(DATA).unwrap();
-		Response {
+		StatusResponse {
 			conn,
 			emojis: crate::emojis::tests::data(conn),
 			responders,

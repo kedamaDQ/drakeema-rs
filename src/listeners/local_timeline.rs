@@ -32,6 +32,6 @@ impl<'a> EventListener for LocalTimelineListener<'a> {
 			return Ok(())
 		}
 
-		self.tx.send(Message::Status(status.clone())).map_err(|e| crate::Error::SendMessageError(Box::new(e)))
+		self.tx.send(Message::Status(status.clone())).map_err(|e| crate::Error::SendMessageForResponseError(Box::new(e)))
 	}
 }

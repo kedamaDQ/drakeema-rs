@@ -1,3 +1,5 @@
+use std::sync::mpsc;
+use std::thread;
 use mastors::{
 	Connection,
 	api::v1::statuses,
@@ -5,7 +7,7 @@ use mastors::{
 use crate::{
 	Emojis,
 	Monsters,
-	Result
+	Result,
 };
 use crate::contents::{
 	Jashin,
@@ -17,10 +19,23 @@ use crate::contents::{
 };
 use super::{
 	Announcer,
-	AnnouncementCriteria,
+	announcement_contents::ContentsAnnouncement,
+	announcement_feeds::FeedsAnnouncement,
 };
 
-pub fn announce(criteria: &AnnouncementCriteria) -> Result<()> {
+const INTERVAL_SECS: u64 = 600;
+
+pub fn start() -> Result<()> {
+	let conn = Connection::new()?;
+	let (tx, rx) = mpsc::channel();
+
+	let tx_for_feed = mpsc::Sender::clone(&tx);
+	let feeds = thread::spawn(move || {
+		FeedsAnnouncement::load(tx_for_feed)
+			.expect("Failed to load FeedsAnnouncement")
+			.process();
+	});
+
 	let monsters = Monsters::load()?;
 	let periodic_contents = PeriodicContents::load()?;
 	let weekly_contents = WeeklyContents::load()?;
@@ -28,34 +43,32 @@ pub fn announce(criteria: &AnnouncementCriteria) -> Result<()> {
 	let seishugosha = Seishugosha::load(&monsters)?;
 	let jashin = Jashin::load(&monsters)?;
 	let weekly_activity = WeeklyActivity::load()?;
-	let contents: Vec<&dyn Announcer> = vec![
-		&periodic_contents,
-		&weekly_contents,
-		&monthly_contents,
-		&seishugosha,
-		&jashin,
-		&weekly_activity,
-	];
-	info!("Start announcement: {:?}", criteria);
 
-	let text = contents.iter()
-		.map(|c| c.announce(&criteria))
-		.filter(|c| c.is_some())
-		.map(|c| c.unwrap())
-		.collect::<Vec<String>>()
-		.join("\n\n");
+	let tx_for_contents = mpsc::Sender::clone(&tx);
+	let contents = thread::spawn(move || {
+		let contents: Vec<&dyn Announcer> = vec![
+			&periodic_contents,
+			&weekly_contents,
+			&monthly_contents,
+			&seishugosha,
+			&jashin,
+			&weekly_activity,
+		];
 
-	if !text.is_empty() {
-		let date_string = criteria.at.format("[%Y-%m-%d]").to_string();
-		let conn = Connection::new()?;
-		let announcement = format!("{}\n\n{}", date_string, Emojis::load(&conn)?.emojify(text));
-		info!("Found announcement: {}", announcement);
+		ContentsAnnouncement::load(contents, tx_for_contents)
+			.expect("Failed to load ContentsAnnouncement")
+			.process();
+	});
 
-		statuses::post(
-			&conn,
-			announcement,
-		).send()?;
+	let mut emojis = Emojis::load(&conn)?;
+	for text in rx {
+		match statuses::post(&conn, emojis.emojify(text)).send() {
+			Ok(_) => info!("Completed to announcement"),
+			Err(e) => error!("Failed to announcement: {}", e),
+		}
 	}
 
+	feeds.join().unwrap();
+	contents.join().unwrap();
 	Ok(())
 }

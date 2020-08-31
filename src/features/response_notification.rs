@@ -18,13 +18,13 @@ use super::rate_limit::RateLimit;
 
 const DATA: &str = "drakeema-data/response_notification.json";
 
-pub struct Response<'a> {
+pub struct NotificationResponse<'a> {
 	conn: &'a Connection,
 	config: NotificationConfig,
 	rate_limit: RateLimit,
 }
 
-impl<'a> Response<'a> {
+impl<'a> NotificationResponse<'a> {
 	pub fn load(conn: &'a Connection) -> Result<Self> {
 		let config: NotificationConfig = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
@@ -33,7 +33,7 @@ impl<'a> Response<'a> {
 
 		let rate_limit = RateLimit::new(config.rate_limit);
 
-		Ok(Response {
+		Ok(NotificationResponse {
 			conn,
 			config,
 			rate_limit,

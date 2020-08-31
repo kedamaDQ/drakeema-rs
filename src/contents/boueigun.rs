@@ -12,6 +12,7 @@ use crate::features::{ Responder, ResponseCriteria };
 
 const DATA: &str = "drakeema-data/contents/boueigun.json";
 
+#[derive(Debug, Clone)]
 pub struct Boueigun<'a> {
 	monsters: BoueigunMonsters<'a>,
 	total_duration: i64,
@@ -101,12 +102,14 @@ impl<'a> std::ops::Deref for Boueigun<'a> {
 	}
 }
 
+#[derive(Debug, Clone)]
 struct CurrentMonsterInfo<'a> {
 	current: &'a BoueigunMonster<'a>,
 	next: &'a BoueigunMonster<'a>,
 	remain: i64,
 }
 
+#[derive(Debug, Clone)]
 struct BoueigunMonsters<'a> {
 	inner: Vec<BoueigunMonster<'a>>,
 }
@@ -142,6 +145,7 @@ impl<'a> BoueigunMonsters<'a> {
 	}
 }
 
+#[derive(Debug, Clone)]
 struct BoueigunMonster<'a> {
 	#[allow(unused)]
 	id: String,

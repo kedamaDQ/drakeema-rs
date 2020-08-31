@@ -27,7 +27,7 @@ use super::{
 
 const MAX_RETRY: usize = 5;
 
-pub fn attach() -> Result<()> {
+pub fn start() -> Result<()> {
 	let conn = Connection::new()?;
     let me = Arc::new(accounts::verify_credentials::get(&conn).send()?);
     let (tx, rx) = mpsc::channel();
@@ -73,13 +73,13 @@ pub fn attach() -> Result<()> {
 
     let keema = contents::Keema::load()?;
 
-    let mut response_status = response_status::Response::load(&conn, responders, &keema)?;
-    let mut response_notification = response_notification::Response::load(&conn)?;
+    let mut status_response = response_status::StatusResponse::load(&conn, responders, &keema)?;
+    let mut notification_response = response_notification::NotificationResponse::load(&conn)?;
 
     for message in rx {
         if let Err(e) = match message {
-            Message::Status(status) => response_status.process(&status),
-            Message::Notification(notification) => response_notification.process(&notification),
+            Message::Status(status) => status_response.process(&status),
+            Message::Notification(notification) => notification_response.process(&notification),
         } {
             error!("Emergency stop: {}", e);
             process::exit(9);
