@@ -5,13 +5,14 @@ use serde::Deserialize;
 use crate::{
 	Error,
 	Result,
-	monsters::{ Monster, Monsters },
+	monsters::Monster,
 	utils::transform_string_to_regex,
 };
-use crate::features::{ Responder, ResponseCriteria };
+use super::{ Responder, ResponseCriteria };
 
 const DATA: &str = "drakeema-data/contents/boueigun.json";
 
+#[derive(Debug, Clone)]
 pub struct Boueigun<'a> {
 	monsters: BoueigunMonsters<'a>,
 	total_duration: i64,
@@ -19,7 +20,7 @@ pub struct Boueigun<'a> {
 }
 
 impl<'a> Boueigun<'a> {
-	pub fn load(monsters: &'a Monsters) -> Result<Self> {
+	pub fn load() -> Result<Self> {
 		info!("Initialize Boueigun");
 
 		let inner: BoueigunJson = serde_json::from_reader(
@@ -27,7 +28,7 @@ impl<'a> Boueigun<'a> {
 		)
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
-		let monsters = BoueigunMonsters::new(&inner.monsters, monsters)?;
+		let monsters = BoueigunMonsters::new(&inner.monsters)?;
 		let total_duration = monsters.iter()
 			.fold(0, |acc, m| acc + m.duration);
 		Ok(Boueigun {
@@ -74,9 +75,11 @@ impl<'a> Boueigun<'a> {
 
 impl<'a> Responder for Boueigun<'a> {
 	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
-		trace!("Start to respond about boueigun: {:?}", criteria);
+		debug!("Start building response about Boueigun: {:?}", criteria);
 
 		if self.nickname_regex.is_match(criteria.text()) {
+			info!("Text matched keywords of Boueigun: {}", criteria.text());
+
 			let info = self.current_status(criteria.at());
 			let response = self.information
 				.replace("__CURRENT_MONSTER__", info.current.display())
@@ -84,10 +87,9 @@ impl<'a> Responder for Boueigun<'a> {
 				.replace("__NEXT_MONSTER__", info.next.display())
 				.replace("__REMAIN__", info.remain.to_string().as_str());
 
-			trace!("Found response about boueigun: criteria: {:?}, response: {}", criteria, response);
 			Some(response)
 		} else {
-			trace!("Nothing response about boueigun: {:?}", criteria);
+			debug!("Nothing response about boueigun: {:?}", criteria);
 			None
 		}
 	}
@@ -101,12 +103,14 @@ impl<'a> std::ops::Deref for Boueigun<'a> {
 	}
 }
 
+#[derive(Debug, Clone)]
 struct CurrentMonsterInfo<'a> {
 	current: &'a BoueigunMonster<'a>,
 	next: &'a BoueigunMonster<'a>,
 	remain: i64,
 }
 
+#[derive(Debug, Clone)]
 struct BoueigunMonsters<'a> {
 	inner: Vec<BoueigunMonster<'a>>,
 }
@@ -120,8 +124,9 @@ impl<'a> std::ops::Deref for BoueigunMonsters<'a> {
 }
 
 impl<'a> BoueigunMonsters<'a> {
-	fn new(b_monsters: impl AsRef<[MonsterJson]>, monsters: &'a Monsters) -> Result<Self> {
+	fn new(b_monsters: impl AsRef<[MonsterJson]>) -> Result<Self> {
 		let mut inner: Vec<BoueigunMonster<'a>> = Vec::new();
+		let monsters = crate::monsters();
 		for monster in b_monsters.as_ref() {
 			match monsters.get(&monster.monster_id) {
 				Some(m) => {
@@ -142,6 +147,7 @@ impl<'a> BoueigunMonsters<'a> {
 	}
 }
 
+#[derive(Debug, Clone)]
 struct BoueigunMonster<'a> {
 	#[allow(unused)]
 	id: String,
@@ -179,8 +185,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_current_positive() {
-		let mon = crate::monsters::tests::data();
-		let bou = data(&mon);
+		let bou = data();
 
 		assert_eq!(
 			bou.current_status(Local.ymd(2020, 6, 5).and_hms(15, 0, 0)).current.id,
@@ -211,8 +216,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_current_negative() {
-		let mon = crate::monsters::tests::data();
-		let bou = data(&mon);
+		let bou = data();
 
 		assert_eq!(
 			bou.current_status(Local.ymd(2020, 6, 5).and_hms(14, 59, 59)).current.id,
@@ -245,9 +249,9 @@ pub(crate) mod tests {
 
 	}
 
-	pub(crate) fn data(monsters: &Monsters) -> Boueigun {
+	pub(crate) fn data<'a>() -> Boueigun<'a> {
 		let inner: BoueigunJson = serde_json::from_str(DATA).unwrap();
-		let monsters = BoueigunMonsters::new(&inner.monsters, monsters).unwrap();
+		let monsters = BoueigunMonsters::new(&inner.monsters).unwrap();
 		let total_duration = monsters.iter()
 			.fold(0, |acc, m| acc + m.duration);
 		Boueigun {

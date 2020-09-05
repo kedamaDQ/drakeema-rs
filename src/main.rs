@@ -1,70 +1,102 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate lazy_static;
+
 pub(crate) mod contents;
 pub(crate) mod emojis;
 pub(crate) mod error;
 pub(crate) mod features;
 pub(crate) mod listeners;
 pub(crate) mod monsters;
+pub(crate) mod rate_limit;
 pub(crate) mod resistances;
 pub(crate) mod tmp_file;
 pub(crate) mod utils;
+pub(crate) mod message_processor;
 
-pub(crate) use monsters::Monsters;
-pub(crate) use emojis::Emojis;
 pub(crate) use error::{ Error, Result };
+pub(crate) use monsters::Monsters;
+pub(crate) use message_processor::Message;
 
 use std::process;
-use chrono::Local;
+use std::sync::mpsc;
+use mastors::prelude::*;
+use features::announcement::{
+	ContentsWorker,
+	FeedsWorker,
+};
+use features::response::ResponseWorker;
+use message_processor::MessageProcessor;
+
+lazy_static! {
+	static ref MONSTERS: Monsters = {
+		monsters::Monsters::load().unwrap()
+	};
+}
+
+fn monsters() -> &'static Monsters {
+	&MONSTERS
+}
 
 fn main() {
-    env_logger::init();
+	env_logger::init();
+	info!("Start drakeema");
 
-    info!("Start drakeema");
+	let contents_worker = match ContentsWorker::load() {
+		Ok(cw) => cw,
+		Err(e) => {
+			error!("Fatal error occurred while initialize ContentsWorker: {}", e);
+			process::exit(1);
+		},
+	};
 
-    let matches = clap::App::new(env!("CARGO_PKG_NAME"))
-        .version(env!("CARGO_PKG_VERSION"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .arg(
-            clap::Arg::with_name("listen")
-                .short("l")
-                .long("listen")
-                .case_insensitive(false)
-                .help("Listen to some timelines and react to toots that contain some keywords")
+	let feeds_worker = match FeedsWorker::load() {
+		Ok(fw) => fw,
+		Err(e) => {
+			error!("Fatal error occurred while initialize FeedsWorker: {}", e);
+			process::exit(1);
+		},
+	};
 
-        )
-        .arg(
-            clap::Arg::with_name("announce")
-                .short("a")
-                .long("announce")
-                .case_insensitive(false)
-                .help("Announce information of some contents in Astoltia")
-        )
-        .group(
-            clap::ArgGroup::with_name("mode")
-            .args(&["listen", "announce"])
-            .required(true)
-        )
-        .get_matches();
+	let response_worker = match ResponseWorker::load() {
+		Ok(rw) => rw,
+		Err(e) => {
+			error!("Fatal error occurred while initialize ResponseWorker: {}", e);
+			process::exit(1);
+		},
+	};
 
-    if matches.is_present("announce") {
-        info!("Start announcement");
+	let conn = match Connection::new() {
+		Ok(conn) => conn,
+		Err(e) => {
+			error!("Fatal error occurred while create Connection for mastors: {}", e);
+			process::exit(1);
+		},
+	};
 
-        match features::announcement::announce(&features::AnnouncementCriteria::new(Local::now())) {
-            Ok(_) => info!("Announcement completed"),
-            Err(e) => error!("{}", e),
-        };
-    } else if matches.is_present("listen") {
-        info!("Start to listen timelines");
+	let mut processor = match MessageProcessor::new(&conn) {
+		Ok(mp) => mp,
+		Err(e) => {
+			error!("Fatal error occurred while initialize MessageProcessor: {}", e);
+			process::exit(1);
+		},
+	};
 
-        match features::bot::attach() {
-            Ok(_) => info!("Timeline listening completed"),
-            Err(e) => error!("{}", e),
-        }
-    }
+	let (tx, rx) = mpsc::channel();
 
-    info!("Exit drakeema");
-    process::exit(0);
+	contents_worker.start(mpsc::Sender::clone(&tx));
+	feeds_worker.start(mpsc::Sender::clone(&tx));
+	response_worker.start(mpsc::Sender::clone(&tx));
+
+	for message in rx {
+		if let Err(e) = processor.process(message) {
+			error!("A fatal error has occurred while processing message: {}", e);
+			process::exit(9);
+		}
+	}
+
+	info!("Exit drakeema");
+	process::exit(0);
 }

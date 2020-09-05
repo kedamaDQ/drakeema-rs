@@ -12,6 +12,7 @@ use crate::{
 
 const DATA: &str = "drakeema-data/emojis.json";
 
+#[derive(Debug, Clone)]
 pub struct Emojis<'a> {
 	conn: &'a Connection,
 	placeholder: String,
@@ -44,7 +45,7 @@ impl<'a> Emojis<'a> {
 			.map_err(Error::MastorsApiError)
 	}
 
-	pub fn get(&mut self) -> String {
+	pub fn emoji(&mut self) -> String {
 		if self.inner.is_empty() {
 			self.refresh();
 		}
@@ -64,7 +65,7 @@ impl<'a> Emojis<'a> {
 
 		let placeholder = self.placeholder.clone();
 		while text.find(placeholder.as_str()).is_some() {
-			text = text.replacen(placeholder.as_str(), self.get().as_str(), 1);
+			text = text.replacen(placeholder.as_str(), self.emoji().as_str(), 1);
 		}
 		text
 	}
@@ -124,9 +125,9 @@ pub(crate) mod tests {
 		let conn_dummy = Connection::from_file(".env.test").unwrap();
 		let mut emojis = data(&conn_dummy);
 		let blank = String::new();
-		for i in 0 .. 500 {
-			println!("{}", i);
-			assert_ne!(emojis.get(), blank);
+
+		for _i in 0 .. 500 {
+			assert_ne!(emojis.emoji(), blank);
 		}
 	}
 
@@ -146,16 +147,16 @@ pub(crate) mod tests {
 		assert_eq!(monster_emojis.len() + character_emojis.len(), emojis.len());
 	}
 
-	pub(crate) fn data(conn: &Connection) -> Emojis {
+	pub(crate) fn data(conn: &Connection) -> super::Emojis {
 		let config: EmojiConfig = serde_json::from_str(CONFIG).unwrap();
 		let ce: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
-		Emojis {
+		super::Emojis {
 			conn,
 			placeholder: config.placeholder.clone(),
 			re: config.category_regex.clone(),
 			rand: rand::thread_rng(),
-			inner: Emojis::build_emojis(&config.category_regex, &ce),
-			cache: Emojis::build_emojis(&config.category_regex, &ce),
+			inner: super::Emojis::build_emojis(&config.category_regex, &ce),
+			cache: super::Emojis::build_emojis(&config.category_regex, &ce),
 		}
 	}
 

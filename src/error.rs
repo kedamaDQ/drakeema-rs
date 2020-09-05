@@ -41,12 +41,6 @@ pub enum Error {
 		mastors::Error,
 	),
 
-	#[error(display = "Failed to send Status to channel: {}", _0)]
-	SendMessageError(
-		#[error(source, from)]
-		Box<std::sync::mpsc::SendError<crate::listeners::Message>>,
-	),
-
 	#[error(display = "Lost the streaming connection: timeline: {}, retry: {}", _0, _1)]
 	LostStreamingConnectionError(
 		mastors::streaming::StreamType,
@@ -74,5 +68,17 @@ pub enum Error {
 	#[error(display = "Rate limit exceeded: limit: {}", _0)]
 	ExceedRateLimitError(
 		usize
+	),
+
+	#[error(display = "HTTP request error: {}", _0)]
+	HttpRequestError(
+		#[error(source, from)]
+		reqwest::Error,
+	),
+
+	#[error(display = "Failed to parse feed: {}, {}", _0, _1)]
+	ParseFeedError(
+		String,
+		feed_rs::parser::ParseFeedError,
 	),
 }

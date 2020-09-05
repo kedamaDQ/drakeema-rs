@@ -5,10 +5,10 @@ use serde::Deserialize;
 use crate::{
 	Error,
 	Result,
-	monsters::{ Monster, Monsters },
+	monsters::Monster,
 	utils::transform_string_to_regex,
 };
-use crate::features::{
+use super::{
 	Announcer,
 	AnnouncementCriteria,
 	Responder,
@@ -17,13 +17,14 @@ use crate::features::{
 
 const DATA: &str = "drakeema-data/contents/seishugosha.json";
 
+#[derive(Debug, Clone)]
 pub struct Seishugosha<'a> {
 	monsters: SeishugoshaMonsters<'a>,
 	inner: SeishugoshaJson,
 }
 
 impl<'a> Seishugosha<'a> {
-	pub fn load(monsters: &'a Monsters) -> Result<Self> {
+	pub fn load() -> Result<Self> {
 		info!("Initialize Seishugosha");
 
 		let inner: SeishugoshaJson = serde_json::from_reader(
@@ -32,7 +33,7 @@ impl<'a> Seishugosha<'a> {
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
 		Ok(Seishugosha {
-			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters)?,
+			monsters: SeishugoshaMonsters::new(&inner.monsters)?,
 			inner,
 		})
 	}
@@ -62,7 +63,7 @@ impl<'a> Seishugosha<'a> {
 
 impl<'a> Announcer for Seishugosha<'a> {
 	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
-		trace!("Start to announce about seishugosha: {:?}", criteria);
+		debug!("Start building announcement about Seishugosha: {:?}", criteria);
 
 		let parts = self.monsters.iter()
 			.map(|m| {
@@ -78,22 +79,20 @@ impl<'a> Announcer for Seishugosha<'a> {
 			&parts +
 			&self.announcement.end;
 		
-		trace!("Found announcement about seishugosha: criteria: {:?}, announcement: {}", criteria, announcement);
-
 		Some(announcement)
 	}
 }
 
 impl<'a> Responder for Seishugosha<'a> {
 	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
-		trace!("Start to reaction about seishugosha: {:?}", criteria);
+		debug!("Start to reaction about seishugosha: {:?}", criteria);
 
 		if self.is_match(criteria.text()) {
 			let reaction = self.announce(&AnnouncementCriteria::new(criteria.at()));
-			trace!("Found reaction about seishugosha: criteria: {:?}, reaction: {:?}", criteria, reaction);
+			info!("Text matched keywords of Seishugosha: {}", criteria.text());
 			reaction
 		} else {
-			trace!("Nothing reaction about seishugosha: {:?}", criteria);
+			debug!("Nothing response about seishugosha: {:?}", criteria);
 			None
 		}
 	}
@@ -107,13 +106,16 @@ impl<'a> std::ops::Deref for Seishugosha<'a> {
 	}
 }
 
+#[derive(Debug, Clone)]
 struct SeishugoshaMonsters<'a> {
 	inner: Vec<SeishugoshaMonster<'a>>,
 }
 
 impl<'a> SeishugoshaMonsters<'a> {
-	fn new(s_monsters: impl AsRef<[MonsterJson]>, monsters: &'a Monsters) -> Result<Self> {
+	fn new(s_monsters: impl AsRef<[MonsterJson]>) -> Result<Self> {
 		let mut inner: Vec<SeishugoshaMonster<'a>> = Vec::new();
+		let monsters = crate::monsters();
+
 		for monster in s_monsters.as_ref() {
 			match monsters.get(&monster.monster_id) {
 				Some(m) => inner.push(SeishugoshaMonster {
@@ -140,6 +142,8 @@ impl<'a> std::ops::Deref for SeishugoshaMonsters<'a> {
 		&self.inner
 	}
 }
+
+#[derive(Debug, Clone)]
 struct SeishugoshaMonster<'a> {
 	#[allow(unused)]
 	id: String,
@@ -187,8 +191,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_positive() {
-		let monsters = crate::monsters::tests::data();
-		let ssgs = data(&monsters);
+		let ssgs = data();
 
 		assert_eq!(
 			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(6, 0, 0), 0),
@@ -219,8 +222,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_negative() {
-		let monsters = crate::monsters::tests::data();
-		let ssgs = data(&monsters);
+		let ssgs = data();
 
 		assert_eq!(
 			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(6, 0, 0), 0),
@@ -255,10 +257,10 @@ pub(crate) mod tests {
 
 	}
 
-	pub(crate) fn data(monsters: &Monsters) -> Seishugosha {
+	pub(crate) fn data<'a>() -> Seishugosha<'a> {
 		let inner: SeishugoshaJson = serde_json::from_str(TEST_DATA).unwrap();
 		Seishugosha {
-			monsters: SeishugoshaMonsters::new(&inner.monsters, monsters).unwrap(),
+			monsters: SeishugoshaMonsters::new(&inner.monsters).unwrap(),
 			inner,
 		}
 	}
