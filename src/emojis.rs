@@ -120,10 +120,12 @@ pub(crate) mod tests {
 	use super::*;
 
 	#[test]
+	#[ignore] // Need to server connection at refresh()
 	fn test_supply_emoji_forever() {
 		let conn_dummy = Connection::from_file(".env.test").unwrap();
 		let mut emojis = data(&conn_dummy);
 		let blank = String::new();
+
 		for _i in 0 .. 500 {
 			assert_ne!(emojis.emoji(), blank);
 		}
