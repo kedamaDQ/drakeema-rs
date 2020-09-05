@@ -5,7 +5,7 @@ use crate::{
 	Error,
 	Result,
 };
-use crate::features::{ Responder, ResponseCriteria };
+use super::{ Responder, ResponseCriteria };
 use crate::utils::transform_string_to_regex;
 
 const DATA: &str = "drakeema-data/contents/keema.json";
@@ -32,7 +32,7 @@ impl Responder for Keema {
 	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
 		use chrono::Timelike;
 
-		trace!("Start to response from Keema: {:?}", criteria);
+		debug!("Start building response from Keema: {:?}", criteria);
 
 		let response = self.keywords.iter()
 			.find(|k| k.regex.is_match(criteria.text()))
@@ -44,7 +44,10 @@ impl Responder for Keema {
 				.to_owned()
 			});
 		
-		trace!("Found response from keema: criteria: {:?}, response: {:?}", criteria, response);
+		if response.is_some() {
+			info!("Text matched keywords of Keema: {}", criteria.text());
+		}
+
 		response
 	}
 }

@@ -1,14 +1,15 @@
+use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use mastors::prelude::*;
-use super::Message;
+use super::TimelineMessage;
 
-pub struct LocalTimelineListener<'a> {
-	me: &'a Account,
-	tx: Sender<Message>,
+pub struct LocalTimelineListener {
+	me: Arc<Account>,
+	tx: Sender<TimelineMessage>,
 }
 
-impl<'a> LocalTimelineListener<'a> {
-	pub fn new(me: &'a Account, tx: Sender<Message>) -> Self {
+impl LocalTimelineListener {
+	pub fn new(me: Arc<Account>, tx: Sender<TimelineMessage>) -> Self {
 		LocalTimelineListener {
 			me,
 			tx,
@@ -16,22 +17,23 @@ impl<'a> LocalTimelineListener<'a> {
 	}
 }
 
-impl<'a> EventListener for LocalTimelineListener<'a> {
+impl EventListener for LocalTimelineListener {
 	type Error = crate::Error;
 
 	fn update(&self, status: &Status) -> Result<(), Self::Error> {
-		trace!("Receive update: {:?}", status);
+		debug!("Receive update: {:?}", status);
 
-		if status.account() == self.me {
-			info!("Skip update: Status posted by myself: {}", status.id());
+		if status.account().id() == self.me.id() {
+			debug!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
 		}
 
 		if status.mentions().iter().any(|m| m.acct() == self.me.acct()) {
-			info!("Skip update: Status mentioned to myself: {}", status.id());
+			debug!("Skip update: Status mentioned to myself: {}", status.id());
 			return Ok(())
 		}
 
-		self.tx.send(Message::Status(status.clone())).map_err(|e| crate::Error::SendMessageForResponseError(Box::new(e)))
+		self.tx.send(TimelineMessage::Status(status.clone())).unwrap();
+		Ok(())
 	}
 }

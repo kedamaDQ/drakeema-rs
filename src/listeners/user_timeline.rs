@@ -1,17 +1,17 @@
-use std::sync::mpsc::Sender;
+use std::sync::Arc;
+use std::sync::mpsc;
 use mastors::prelude::*;
-use crate::Error;
-use super::Message;
+use super::TimelineMessage;
 
-pub struct UserTimelineListener<'a> {
-	me: &'a Account, 
-	tx: Sender<Message>,
+pub struct UserTimelineListener {
+	me: Arc<Account>, 
+	tx: mpsc::Sender<TimelineMessage>,
 }
 
-impl<'a> UserTimelineListener<'a> {
+impl UserTimelineListener {
 	pub fn new(
-		me: &'a Account,
-		tx: Sender<Message>,
+		me: Arc<Account>,
+		tx: mpsc::Sender<TimelineMessage>,
 	) -> Self {
 		UserTimelineListener {
 			me,
@@ -20,27 +20,29 @@ impl<'a> UserTimelineListener<'a> {
 	}
 }
 
-impl<'a> EventListener for UserTimelineListener<'a> {
+impl EventListener for UserTimelineListener {
 	type Error = crate::Error;
 
 	fn update(&self, status: &Status) -> Result<(), Self::Error> {
-		trace!("Receive update: {:?}", status);
+		debug!("Receive update: {:?}", status);
 
-		if status.account() == self.me {
-			info!("Skip update: Status posted by myself: {}", status.id());
+		if status.account().id() == self.me.id() {
+			debug!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
 		}
 
 		if is_overlapped_at_local_and_home(status) {
-			trace!("Skip update: Status overlapped at local and home: {}", status.id());
+			debug!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
-		self.tx.send(Message::Status(status.clone())).map_err(|e| Error::SendMessageForResponseError(Box::new(e)))
+		self.tx.send(TimelineMessage::Status(status.clone())).unwrap();
+		Ok(())
 	}
 
 	fn notification(&self, notification: &Notification) -> Result<(), Self::Error> {
-		info!("Notification raceived: {}: {}", notification.notification_type(), notification.id());
-		self.tx.send(Message::Notification(notification.clone())).map_err(|e| Error::SendMessageForResponseError(Box::new(e)))
+		debug!("Notification raceived: {}: {}", notification.notification_type(), notification.id());
+		self.tx.send(TimelineMessage::Notification(notification.clone())).unwrap();
+		Ok(())
 	}
 }
 

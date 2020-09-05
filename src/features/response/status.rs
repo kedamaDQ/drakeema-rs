@@ -1,77 +1,69 @@
 use std::fs::File;
 use std::io::BufReader;
-use mastors::{
-	Connection,
-	api::v1::statuses,
-	entities::Status,
-};
+use std::sync::mpsc;
+use mastors::entities::Status;
 use serde::Deserialize;
 use crate::{
-	Emojis,
 	Error,
+	Message,
+	Monsters,
 	Result,
-	contents,
+	contents::*,
 	utils::{
 		transform_string_to_regex,
 		transform_vec_string_to_vec_regex,
 	},
 };
-use super::{
-	Responder,
-	ResponseCriteria,
-	rate_limit::RateLimit,
-};
 
-const DATA: &str = "drakeema-data/response_status.json";
+const DATA: &str = "drakeema-data/features/response/status.json";
 
-pub struct StatusResponse<'a> {
-	conn: &'a Connection,
-	emojis: Emojis<'a>, 
-	responders: Vec<&'a dyn Responder>,
-	keema: &'a contents::Keema,
+pub struct StatusProcessor {
+	responders: Vec<Box<dyn Responder>>,
+	keema: Keema,
 	config: Config,
-	rate_limit: RateLimit,
 }
 
-impl<'a> StatusResponse<'a> {
-	pub fn load(
-		conn: &'a Connection,
-		responders: Vec<&'a dyn Responder>,
-		keema: &'a contents::Keema
-	) -> Result<Self> {
+impl StatusProcessor {
+	pub fn load() -> Result<Self> {
+		info!("Initialize StatusProcessor");
+
 		let config: Config = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
-		let emojis = Emojis::load(&conn)?;
-		let rate_limit = RateLimit::new(config.rate_limit);
-		Ok(StatusResponse {
-			conn,
-			emojis,
+		let responders: Vec<Box<dyn Responder>> = vec![
+			Box::new(Jashin::load()?),
+			Box::new(Seishugosha::load()?),
+			Box::new(Boueigun::load()?),
+			Box::new(Monsters::load()?),
+		];
+
+		let keema = Keema::load()?;
+
+		Ok(StatusProcessor {
 			responders,
 			keema,
 			config,
-			rate_limit,
 		})
 	}
 
-	pub fn process(&mut self, status: &Status) -> Result<()> {
+	pub fn process(&self, tx: &mpsc::Sender<Message>, status: &Status) {
         let content = match status.content() {
             Some(content) => content,
-            None => return Ok(()),
+            None => return,
         };
         trace!("Status received: {:?}", status);
 
 		if self.is_ignore(status.account().acct()) {
 			info!("Ignore status: acct: {}", status.account().acct());
-			return Ok(());
+			return;
 		}
 
         let response: Option<String>;
 
         if self.is_oshiete_keemasan(&content) {
-            info!("Match Keywords for OSHIETE: {}", content);
+            info!("Text matched keywords of Oshiete: {}", content);
 
 			let rc = ResponseCriteria::new(chrono::Local::now(), content);
             let mut r = self.responders.iter()
@@ -85,10 +77,9 @@ impl<'a> StatusResponse<'a> {
                 r = String::from("？");
             }
 
-			info!("StatusResponse for OSHIETE: {}", r);
 			response = Some(r);
 		} else if self.is_keemasan(&content) && self.is_healthcheck(content){
-			info!("Match keywords for healthcheck: {}", content);
+			info!("Text matched keywords of healthcheck: {}", content);
 
 			use chrono::{
 				Timelike,
@@ -101,31 +92,18 @@ impl<'a> StatusResponse<'a> {
         } else {
             response = self.keema.respond(&ResponseCriteria::new(chrono::Local::now(), content));
         }
-        trace!("StatusResponse created: {:?}", response);
 
         if let Some(response) = response {
-			if let Err(e) = self.rate_limit.increment() {
-				error!("Respond rate limit exceeded: {}", e);
-				return Err(e);
-			}
-
-			info!("Reply to {}: status: {}", status.account().acct(), &response);
-            let response = self.emojis.emojify(
-                String::from("@") + status.account().acct() + "\n\n" + response.as_str()
-            );
-    
-            let mut post = statuses::post(self.conn, response);
-            if status.account().is_remote() {
-                post = post.in_reply_to_id(status.id());
-            }
-    
-            match post.send() {
-                Ok(_) => info!("StatusResponse completed"),
-                Err(e) => error!("Failed to send reply to {}: {}", status.account().acct(), e),
-            };
+			tx.send(Message::Status {
+				text: response,
+				mention: Some(status.account().acct().to_owned()),
+				in_reply_to_id: if status.account().is_remote() {
+					Some(status.id().to_owned())
+				} else {
+					None
+				}
+			}).unwrap();
 		}
-		
-		Ok(())
 	}
 
 	fn is_ignore(&self, acct: &str) -> bool {
@@ -158,7 +136,6 @@ struct Config {
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	healthcheck_regex: regex::Regex,
 	
-	rate_limit: usize,
 	healthcheck_responses: Vec<String>,
 
 	#[serde(deserialize_with = "transform_vec_string_to_vec_regex")]
@@ -171,9 +148,7 @@ mod tests {
 
 	#[test]
 	fn test_is_ignore() {
-		let conn = Connection::new().unwrap();
-		let keema = contents::keema::tests::data();
-		let resp = data(&conn, vec![], &keema);
+		let resp = data(vec![]);
 
 		assert!(resp.is_ignore("hoge@example.com"));
 		assert!(resp.is_ignore("hoge@fuga.com"));
@@ -181,14 +156,11 @@ mod tests {
 		assert!(!resp.is_ignore("kedama@foresdon.jp"));
 	}
 
-	fn data<'a>(conn: &'a Connection, responders: Vec<&'a dyn Responder>, keema: &'a contents::Keema) -> StatusResponse<'a> {
+	fn data(responders: Vec<Box<dyn Responder>>) -> StatusProcessor {
 		let config = serde_json::from_str::<Config>(DATA).unwrap();
-		StatusResponse {
-			conn,
-			emojis: crate::emojis::tests::data(conn),
+		StatusProcessor {
 			responders,
-			keema,
-			rate_limit: RateLimit::new(config.rate_limit),
+			keema: Keema::load().unwrap(),
 			config,
 		}
 	}

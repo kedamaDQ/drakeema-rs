@@ -6,7 +6,7 @@ use crate::{
 	Error,
 	Result,
 };
-use crate::features::{ Announcer, AnnouncementCriteria };
+use super::{ Announcer, AnnouncementCriteria };
 
 const DATA: &str = "drakeema-data/contents/weekly_contents.json";
 
@@ -54,7 +54,7 @@ impl WeeklyContents {
 
 impl Announcer for WeeklyContents {
 	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
-		trace!("Start to announce about weekly contents: {:?}", criteria);
+		debug!("Start building announcement about WeeklyContents: {:?}", criteria);
 
 		let announcement = vec![
 			self.contents_to_end(criteria.at()),
@@ -66,10 +66,9 @@ impl Announcer for WeeklyContents {
 		.join("\n");
 
 		if announcement.is_empty() {
-			trace!("Nothing to announce about weekly contents: {:?}", criteria);
+			debug!("Nothing announcement about WeeklyContents: {:?}", criteria);
 			None
 		} else {
-			trace!("Found announcement about weekly contents: criteria: {:?}, announcement: {}", criteria, announcement);
 			Some(announcement)
 		}
 	}

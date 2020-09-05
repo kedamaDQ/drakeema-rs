@@ -5,11 +5,11 @@ use serde::Deserialize;
 use crate::{
 	Error,
 	Result,
-	monsters::{ Monster, Monsters },
+	monsters::Monster,
 	resistances::Resistances,
 	utils::transform_string_to_regex,
 };
-use crate::features::{
+use super::{
 	Announcer,
 	AnnouncementCriteria,
 	Responder,
@@ -25,7 +25,7 @@ pub struct Jashin<'a> {
 }
 
 impl<'a> Jashin<'a> {
-	pub fn load(monsters: &'a Monsters) -> Result<Self> {
+	pub fn load() -> Result<Self> {
 		info!("Initialize Jashin");
 
     	let mut inner: JashinJson = serde_json::from_reader(
@@ -36,7 +36,7 @@ impl<'a> Jashin<'a> {
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 
 		Ok(Jashin {
-			tables: Tables::new(&inner.tables, monsters, inner.reference_date)?,
+			tables: Tables::new(&inner.tables, inner.reference_date)?,
 			inner,
 		})
 	}
@@ -50,7 +50,7 @@ impl<'a> Announcer for Jashin<'a> {
 	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
 		use std::ops::Add;
 
-		trace!("Start to announce about jashin: {:?}", criteria);
+		debug!("Start building announce about Jashin: {:?}", criteria);
 
 		let title_today = self.title(criteria.at());
 		let title_tomorrow = self.title(criteria.at().add(Duration::hours(24)));
@@ -73,27 +73,26 @@ impl<'a> Announcer for Jashin<'a> {
 				.replace("__TITLE__", title_today.display_title())
 		};
 
-		trace!("Found announcement about jashin: {}", announcement);
-
 		Some(announcement)
 	}
 }
 
 impl<'a> Responder for Jashin<'a> {
 	fn respond(&self, criteria: &ResponseCriteria) -> Option<String> {
-		trace!("Start to respond about jashin: {:?}", criteria);
+		debug!("Start building response about Jashin: {:?}", criteria);
 
 		if self.nickname_regex.is_match(criteria.text()) {
+			info!("Text matched keywords of Jashin: {}", criteria.text());
+
 			let title = self.title(criteria.at());
 			let response = self.information
     			.replace("__TITLE__", title.display_title())
     			.replace("__MONSTERS__", title.display_monsters().as_str())
 				.replace("__RESISTANCES__", title.display_resistances(Some(&self.area_names)).as_str());
 			
-			trace!("Found response about jashin: criteria: {:?}, response: {}", criteria, response);
 			Some(response)
 		} else {
-			trace!("Nothing response about jashin: {:?}", criteria);
+			debug!("Nothing response about jashin: {:?}", criteria);
 			None
 		}
 	}
@@ -116,14 +115,13 @@ struct Tables<'a> {
 impl<'a> Tables<'a> {
 	fn new(
 		tables: impl AsRef<[TableJson]>,
-		monsters: &'a Monsters,
 		reference_date: DateTime<Local>) -> Result<Self> {
 		let mut inner: Vec<Table> = Vec::new();
 
 		for table in tables.as_ref() {
 			inner.push(Table {
 				start_day: table.start_day,
-				titles: Titles::new(&table.titles, monsters, reference_date)?
+				titles: Titles::new(&table.titles, reference_date)?
 			})
 		}
 
@@ -174,10 +172,10 @@ struct Titles<'a> {
 impl<'a> Titles<'a> {
 	fn new(
 		titles: impl AsRef<[TitleJson]>,
-		monsters: &'a Monsters,
 		reference_date: DateTime<Local>
 	) -> Result<Self> {
 		let mut inner: Vec<Title<'a>> = Vec::new();
+		let monsters = crate::monsters();
 
 		for title in titles.as_ref() {
 			let mut mon: Vec<&'a Monster> = Vec::new();
@@ -349,8 +347,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_title() {
-		let monsters = crate::monsters::tests::data();
-		let jashin = data(&monsters);
+		let jashin = data();
 
 		// 1st title
 		assert_eq!(
@@ -422,8 +419,7 @@ pub(crate) mod tests {
 
 	#[test]
 	fn test_past_date() {
-		let monsters = crate::monsters::tests::data();
-		let jashin = data(&monsters);
+		let jashin = data();
 
 		// Edge of title before reference date
 		assert_eq!(
@@ -442,13 +438,13 @@ pub(crate) mod tests {
 		);
 	}
 
-	pub(crate) fn data(monsters: &Monsters) -> Jashin {
+	pub(crate) fn data<'a>() -> Jashin<'a> {
 		let mut inner: JashinJson = serde_json::from_str(TEST_DATA).unwrap();
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 
 		Jashin {
-			tables: Tables::new(&inner.tables, monsters, inner.reference_date).unwrap(),
+			tables: Tables::new(&inner.tables, inner.reference_date).unwrap(),
 			inner,
 		}
 	}

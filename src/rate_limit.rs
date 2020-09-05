@@ -6,6 +6,7 @@ use crate::{
 
 const RESET_INTERVAL: i64 = 1;
 
+#[derive(Debug, Clone)]
 pub struct RateLimit {
 	from: DateTime<Local>,
 	limit: usize,
@@ -37,8 +38,14 @@ impl RateLimit {
 				self.count
 			}
 		};
-
-		info!("Rate limit status: from: {}, count: {}", self.from, self.count);
 		Ok(count)
+	}
+}
+
+use std::fmt;
+
+impl fmt::Display for RateLimit {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "from: {}, limit: {}, count: {}", self.from, self.limit, self.count)
 	}
 }

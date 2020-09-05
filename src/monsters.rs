@@ -9,7 +9,7 @@ use crate::{
 	resistances::Resistances,
 	utils::transform_string_to_regex,
 };
-use crate::features::{ Responder, ResponseCriteria };
+use super::contents::{ Responder, ResponseCriteria };
 
 const DATA: &str = "drakeema-data/contents/monsters.json";
 const DATA_DIR: &str = "drakeema-data/monsters";
@@ -46,9 +46,10 @@ impl Monsters {
     				None
     			}
 			});
-		trace!("Found monster datas: {:?}", files);
     	
     	for file in files {
+			debug!("Start loading {:?}", file);
+
     		let m: Monster = serde_json::from_reader(
     			BufReader::new(File::open(&file)?)
 			)
@@ -163,9 +164,4 @@ struct MonstersJson {
 
 #[cfg(test)]
 pub(crate) mod tests {
-	use super::*;
-
-	pub(crate) fn data() -> Monsters {
-		Monsters::load().unwrap()
-	}
 }

@@ -41,18 +41,6 @@ pub enum Error {
 		mastors::Error,
 	),
 
-	#[error(display = "Failed to send message for response to channel: {}", _0)]
-	SendMessageForResponseError(
-		#[error(source, from)]
-		Box<std::sync::mpsc::SendError<crate::listeners::Message>>,
-	),
-
-	#[error(display = "Failed to send message for announce to channel: {}", _0)]
-	SendMessageForAnnounceError(
-		#[error(source, from)]
-		std::sync::mpsc::SendError<String>,
-	),
-
 	#[error(display = "Lost the streaming connection: timeline: {}, retry: {}", _0, _1)]
 	LostStreamingConnectionError(
 		mastors::streaming::StreamType,

@@ -9,7 +9,7 @@ use crate::{
 	Result,
 	tmp_file,
 };
-use crate::features::{ Announcer, AnnouncementCriteria };
+use super::{ Announcer, AnnouncementCriteria };
 
 const DATA: &str = "drakeema-data/contents/weekly_activity.json";
 const TMP: &str = "weekly_activity.tmp";
@@ -32,7 +32,7 @@ impl WeeklyActivity {
 
 impl Announcer for WeeklyActivity {
 	fn announce(&self, criteria: &AnnouncementCriteria) -> Option<String> {
-		trace!("Start to announce about weekly activity: {:?}", criteria);
+		debug!("Start building announcement about WeeklyActivities: {:?}", criteria);
 
 		use chrono::offset::TimeZone;
 
@@ -56,7 +56,7 @@ impl Announcer for WeeklyActivity {
 				return None;
 			},
 		};
-		trace!("Latest activity: {:?}", latest_activity);
+		debug!("Latest activity: {:?}", latest_activity);
 
 		let last_announced = match tmp_file::load_tmp_as_i64(TMP) {
 			Ok(opt) => match opt {
@@ -68,10 +68,10 @@ impl Announcer for WeeklyActivity {
 				return None;
 			},
 		};
-		trace!("Last announced: {:?}", last_announced);
+		debug!("Last announced: {:?}", last_announced);
 
 		if latest_activity.week() <= last_announced {
-			trace!("Nothing to announce about weekly activity: {:?}", criteria);
+			debug!("Nothing announcement about WeeklyActivity: {:?}", criteria);
 			return None;
 		}
 
@@ -80,7 +80,7 @@ impl Announcer for WeeklyActivity {
 		).date();
 		let end_date = start_date + Duration::days(6);
 
-		trace!("Week to announce: from: {}, to: {}", start_date, end_date);
+		debug!("Week to announce: from: {}, to: {}", start_date, end_date);
 
 		if let Err(e) = tmp_file::save_tmp(
 			TMP, latest_activity.week().to_string()
@@ -95,8 +95,6 @@ impl Announcer for WeeklyActivity {
 			.replace("__ACTIVE_USER__", &latest_activity.logins().to_string())
 			.replace("__STATUS_COUNT__", &latest_activity.statuses().to_string());
 		
-		trace!("Found announcement for weekly activity: criteria: {:?}, announcement: {}", criteria, announcement);
-
 		Some(announcement)
 	}
 }

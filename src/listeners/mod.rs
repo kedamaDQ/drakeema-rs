@@ -10,7 +10,7 @@ use mastors::entities::{
 };
 
 #[derive(Debug, Clone)]
-pub enum Message {
+pub enum TimelineMessage {
 	Status(Status),
 	Notification(Notification),
 }
