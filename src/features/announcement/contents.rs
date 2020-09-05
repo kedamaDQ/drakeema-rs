@@ -67,6 +67,8 @@ impl ContentsWorker {
 			if !text.is_empty() {
 				tx.send(Message::Status{ text, mention: None, in_reply_to_id: None}).unwrap();
 			}
+
+			thread::sleep(StdDuration::from_secs(2));
 		}});
 	}
 }
