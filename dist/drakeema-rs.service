@@ -7,7 +7,7 @@ Type=simple
 User=drakeema
 WorkingDirectory=/home/drakeema
 Environment="RUST_LOG=info"
-ExecStart=/home/drakeema/drakeema-rs --listen
+ExecStart=/home/drakeema/drakeema-rs
 TimeoutSec=15
 Restart=always
 
