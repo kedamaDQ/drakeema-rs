@@ -123,10 +123,10 @@ mod tests {
 		assert_eq!(at.duration_secs(dt), 43199);
 
 		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 29);
-		assert_eq!(at.duration_secs(dt), 1);
+		assert_eq!(at.duration_secs(dt), 43201);
 
 		let dt = Local.ymd(2020, 9, 6).and_hms_milli(6, 1, 29, 1);
-		assert_eq!(at.duration_secs(dt), 1);
+		assert_eq!(at.duration_secs(dt), 43200);
 	}
 
 	fn at() -> AnnouncementTimes {
