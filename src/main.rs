@@ -41,7 +41,11 @@ fn monsters() -> &'static Monsters {
 }
 
 fn main() {
-	env_logger::init();
+	if parse_args().is_present("notime") {
+		env_logger::builder().format_timestamp(None).init();
+	} else {
+		env_logger::init();
+	}
 	info!("Start drakeema");
 
 	let contents_worker = match ContentsWorker::load() {
@@ -99,4 +103,32 @@ fn main() {
 
 	info!("Exit drakeema");
 	process::exit(0);
+}
+
+fn parse_args<'a>() -> clap::ArgMatches<'a> {
+    clap::App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .arg(
+            clap::Arg::with_name("time")
+                .short("t")
+                .long("time")
+                .case_insensitive(false)
+                .help("Write time stamp to the log")
+
+        )
+        .arg(
+            clap::Arg::with_name("notime")
+                .short("T")
+                .long("no-time")
+                .case_insensitive(false)
+                .help("Do not write time stamp to the log")
+        )
+        .group(
+            clap::ArgGroup::with_name("logmode")
+            .args(&["time", "notime"])
+            .required(false)
+        )
+        .get_matches()
 }

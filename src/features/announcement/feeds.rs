@@ -51,6 +51,8 @@ impl FeedsWorker {
 			info!("Start announcing about feeds");
 			match feeds.fetch_entries() {
 				Ok(entries) => {
+					info!("Found {} entries to announce", entries.len());
+
 					for entry in entries {
 						tx.send(Message::Status{
 							text: entry.build_text(),
@@ -121,7 +123,6 @@ impl Feeds {
 				.for_each(|e| entries.push(Entry::new(&e)));
 		}
 
-		info!("Found {} entries to announce", entries.len());
 		Ok(entries)
 	}
 

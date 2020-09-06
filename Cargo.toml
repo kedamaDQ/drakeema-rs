@@ -11,6 +11,7 @@ categories = ["command-line-utilities", "web-programming::http-client"]
 [dependencies]
 #mastors = { git = "https://github.com/kedamaDQ/mastors", branch = "master" }
 chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "2.33" }
 env_logger = { version = "0.7" }
 err-derive = { version = "0.2" }
 feed-rs = { version = "0.4" }
