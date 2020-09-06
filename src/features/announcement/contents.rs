@@ -135,7 +135,7 @@ mod tests {
 		)
 	}
 
-	fn data() -> ContentsWorker {
+	fn _data() -> ContentsWorker {
 		ContentsWorker {
 			contents: Arc::new(Vec::new()),
 			announcement_times: Arc::new(
