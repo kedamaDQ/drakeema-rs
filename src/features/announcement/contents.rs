@@ -68,7 +68,8 @@ impl ContentsWorker {
 				tx.send(Message::Status{ text, mention: None, in_reply_to_id: None}).unwrap();
 			}
 
-			thread::sleep(StdDuration::from_secs(2));
+			// Prevent runaway due to time error
+			thread::sleep(StdDuration::from_secs(10));
 		}});
 	}
 }
@@ -105,4 +106,50 @@ impl AnnouncementTimes {
 #[derive(Debug, Clone, Deserialize)]
 struct Json {
 	announcement_times: Vec<NaiveTime>,
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	use chrono::offset::TimeZone;
+
+	#[test]
+	fn test_duration_secs() {
+		let at = at();
+		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 30);
+		assert_eq!(at.duration_secs(dt), 43200);
+
+		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 31);
+		assert_eq!(at.duration_secs(dt), 43199);
+
+		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 29);
+		assert_eq!(at.duration_secs(dt), 1);
+
+		let dt = Local.ymd(2020, 9, 6).and_hms_milli(6, 1, 29, 1);
+		assert_eq!(at.duration_secs(dt), 1);
+	}
+
+	fn at() -> AnnouncementTimes {
+		AnnouncementTimes::new(
+			serde_json::from_str::<Json>(DATA).unwrap().announcement_times
+		)
+	}
+
+	fn data() -> ContentsWorker {
+		ContentsWorker {
+			contents: Arc::new(Vec::new()),
+			announcement_times: Arc::new(
+				AnnouncementTimes::new(serde_json::from_str::<Json>(DATA).unwrap().announcement_times)
+			)
+		}
+	}
+
+	const DATA: &str = r#"
+		{
+			"announcement_times": [
+				"06:01:30",
+				"18:01:30"
+			]
+		}
+	"#;
 }
