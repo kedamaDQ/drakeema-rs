@@ -96,6 +96,7 @@ fn listen(
 				if retry != 0 {
 					streaming::get(&conn, stream_type.clone()).send()?;
 					info!("Timeline listening recovered: retry: {}", retry);
+					retry = 0;
 				}
 			},
 			Err(e) => {
