@@ -6,10 +6,9 @@ edition = "2018"
 description = "A bot for foresdon.jp"
 repository = "https://github.com/kedamaDQ/drakeema-rs/"
 license = "MIT OR Apache-2.0"
-categories = ["command-line-utilities", "web-programming::http-client"]
+categories = ["web-programming::http-client"]
 
 [dependencies]
-#mastors = { git = "https://github.com/kedamaDQ/mastors", branch = "master" }
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "2.33" }
 env_logger = { version = "0.7" }
@@ -17,6 +16,7 @@ err-derive = { version = "0.2" }
 feed-rs = { version = "0.4" }
 lazy_static = { version = "1.4" }
 log = { version = "0.4" }
+#mastors = { git = "https://github.com/kedamaDQ/mastors", branch = "master" }
 mastors = { path = "../mastors" }
 rand = { version = "0.7" }
 regex = { version = "1.3" }
