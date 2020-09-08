@@ -44,6 +44,7 @@ impl NotificationProcessor {
 				tx.send(Message::Status{
 					text: self.config.followed_message.to_owned(),
 					mention: Some(notification.account().acct().to_owned()),
+					visibility: status.visibility(),
 					in_reply_to_id: Some(status.id().to_owned()),
 				}).unwrap();
 			} else if self.config.unfollow_regex.is_match(content) {
@@ -51,6 +52,7 @@ impl NotificationProcessor {
 				tx.send(Message::Status{
 					text: self.config.unfollowed_message.to_owned(),
 					mention: Some(notification.account().acct().to_owned()),
+					visibility: status.visibility(),
 					in_reply_to_id: Some(status.id().to_owned()),
 				}).unwrap();
 			}
