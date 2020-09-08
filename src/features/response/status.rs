@@ -97,7 +97,8 @@ impl StatusProcessor {
 			tx.send(Message::Status {
 				text: response,
 				mention: Some(status.account().acct().to_owned()),
-				in_reply_to_id: if status.account().is_remote() {
+				visibility: status.visibility(),
+				in_reply_to_id: if status.account().is_remote() || !status.is_public() {
 					Some(status.id().to_owned())
 				} else {
 					None

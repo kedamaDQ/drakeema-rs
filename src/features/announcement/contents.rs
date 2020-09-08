@@ -5,6 +5,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration as StdDuration;
 use chrono::{ DateTime, Duration, Local, NaiveTime };
+use mastors::entities::Visibility;
 use serde::Deserialize;
 use crate::{
 	Error,
@@ -65,7 +66,12 @@ impl ContentsWorker {
 				.join("\n\n");
 
 			if !text.is_empty() {
-				tx.send(Message::Status{ text, mention: None, in_reply_to_id: None}).unwrap();
+				tx.send(Message::Status{
+					text,
+					mention: None,
+					visibility: Visibility::Public,
+					in_reply_to_id: None
+				}).unwrap();
 			}
 
 			// Prevent runaway due to time error

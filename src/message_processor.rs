@@ -28,7 +28,7 @@ impl<'a> MessageProcessor<'a> {
 
 	pub fn process(&mut self, msg: Message) -> Result<()> {
 		match msg {
-			Message::Status{text, mention, in_reply_to_id} => self.status(text, mention, in_reply_to_id),
+			Message::Status{text, mention, visibility, in_reply_to_id} => self.status(text, mention, visibility, in_reply_to_id),
 			Message::Follow(id) => self.follow(id),
 			Message::Unfollow(id) => self.unfollow(id),
 			Message::Error(text, e) => {
@@ -42,6 +42,7 @@ impl<'a> MessageProcessor<'a> {
 		&mut self,
 		text: String,
 		mention: Option<String>,
+		visibility: Visibility,
 		in_reply_to_id: Option<String>
 	) -> Result<()> {
 		info!("Start posting a Status");
@@ -56,7 +57,8 @@ impl<'a> MessageProcessor<'a> {
 			None => text,
 		};
 
-		let post = statuses::post(self.conn, self.emojis.emojify(&text));
+		let post = statuses::post(self.conn, self.emojis.emojify(&text))
+			.visibility(visibility);
 
 		let post = match in_reply_to_id {
 			Some(id) => post.in_reply_to_id(id),
@@ -112,6 +114,7 @@ pub enum Message {
 	Status {
 		text: String,
 		mention: Option<String>,
+		visibility: Visibility,
 		in_reply_to_id: Option<String>,
 	},
 	Follow(Account),

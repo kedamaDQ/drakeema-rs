@@ -5,6 +5,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 use feed_rs::model::Entry as FeedEntry;
+use mastors::entities::Visibility;
 use regex::Regex;
 use reqwest::blocking::Client;
 use serde::Deserialize;
@@ -57,6 +58,7 @@ impl FeedsWorker {
 						tx.send(Message::Status{
 							text: entry.build_text(),
 							mention: None,
+							visibility: Visibility::Public,
 							in_reply_to_id: None
 						}).unwrap();
 
