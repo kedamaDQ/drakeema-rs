@@ -84,9 +84,17 @@ struct Feeds {
 }
 
 impl Feeds {
-	fn new(feeds: Vec<Feed>, regexes: Vec<Regex>, user_agent: String) -> Result<Self> {
+	fn new(feeds: Vec<Feed>, regexes: Vec<Regex>, user_agent: Option<String>) -> Result<Self> {
+		let client = if let Some(ua) = user_agent {
+			Client::builder()
+				.user_agent(ua)
+				.build()?
+		} else {
+			Client::new()
+		};
+
 		Ok(Feeds {
-			client: Client::builder().user_agent(&user_agent).build()?,
+			client,
 			feeds,
 			regexes,
 		})
@@ -191,7 +199,7 @@ struct FeedAnnouncementJson {
 	title_regexes: Vec<regex::Regex>,
 	announcement_interval_secs: u64,
 	post_interval_secs: u64,
-	user_agent: String,
+	user_agent: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
