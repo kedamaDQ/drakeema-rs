@@ -4,6 +4,7 @@ mod status;
 use std::sync::Arc;
 use std::sync::mpsc;
 use std::thread;
+use chrono::{ Duration, Local };
 use mastors::prelude::*;
 use mastors::{
 	api::v1::accounts,
@@ -19,6 +20,7 @@ use notification::NotificationProcessor;
 use status::StatusProcessor;
 
 const MAX_RETRY: usize = 5;
+const RETRY_RESET_INTERVAL_SECS: i64 = 300;
 
 pub struct ResponseWorker {
 	me: Arc<Account>,
@@ -90,19 +92,19 @@ fn listen(
 	let conn = Connection::new()?;
 	let mut stream = streaming::get(&conn, stream_type.clone()).send()?;
 	let mut retry = 0;
+	let mut last_retry = Local::now();
 	while retry < MAX_RETRY {
-		match stream.attach(listener) {
-			Ok(_) => {
-				if retry != 0 {
-					streaming::get(&conn, stream_type.clone()).send()?;
-					info!("Timeline listening recovered: retry: {}", retry);
-					retry = 0;
-				}
-			},
-			Err(e) => {
+		if let Err(e) = stream.attach(listener) {
+			if Local::now() - last_retry > Duration::seconds(RETRY_RESET_INTERVAL_SECS) {
+				retry = 1;
+			} else {
 				retry += 1;
-				warn!("Timeline listener returns an error: {}, timeline: {}, retry: {}", e, stream_type, retry);
 			}
+			warn!(
+				"Timeline listener returns an error: {}, timeline: {}, last_retry: {}, count: {}",
+				e, stream_type, last_retry, retry
+			);
+			last_retry = Local::now();
 		};
 	}
 	Err(Error::LostStreamingConnectionError(stream_type, MAX_RETRY))
