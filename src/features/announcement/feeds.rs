@@ -36,7 +36,7 @@ impl FeedsWorker {
 		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
 
 		Ok(FeedsWorker{
-			feeds: Arc::new(Feeds::new(json.feeds, json.title_regexes)?),
+			feeds: Arc::new(Feeds::new(json.feeds, json.title_regexes, json.user_agent)?),
 			announcement_interval_secs: json.announcement_interval_secs,
 			post_interval_secs: json.post_interval_secs,
 		})
@@ -82,9 +82,9 @@ struct Feeds {
 }
 
 impl Feeds {
-	fn new(feeds: Vec<Feed>, regexes: Vec<Regex>) -> Result<Self> {
+	fn new(feeds: Vec<Feed>, regexes: Vec<Regex>, user_agent: String) -> Result<Self> {
 		Ok(Feeds {
-			client: Client::new(),
+			client: Client::builder().user_agent(&user_agent).build()?,
 			feeds,
 			regexes,
 		})
@@ -189,6 +189,7 @@ struct FeedAnnouncementJson {
 	title_regexes: Vec<regex::Regex>,
 	announcement_interval_secs: u64,
 	post_interval_secs: u64,
+	user_agent: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
