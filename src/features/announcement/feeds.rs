@@ -57,9 +57,10 @@ impl FeedsWorker {
 
 						tx.send(Message::Status{
 							text: entry.build_text(),
-							mention: None,
 							visibility: Visibility::Public,
-							in_reply_to_id: None
+							mention: None,
+							in_reply_to_id: None,
+							poll_options: None,
 						}).unwrap();
 
 						thread::sleep(Duration::from_secs(post_interval_secs));

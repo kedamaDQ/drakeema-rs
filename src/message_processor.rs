@@ -28,7 +28,9 @@ impl<'a> MessageProcessor<'a> {
 
 	pub fn process(&mut self, msg: Message) -> Result<()> {
 		match msg {
-			Message::Status{text, mention, visibility, in_reply_to_id} => self.status(text, mention, visibility, in_reply_to_id),
+			Message::Status{
+				text, visibility, mention, in_reply_to_id, poll_options,
+			} => self.status(text, visibility, mention, in_reply_to_id, poll_options),
 			Message::Follow(id) => self.follow(id),
 			Message::Unfollow(id) => self.unfollow(id),
 			Message::Error(text, e) => {
@@ -41,9 +43,10 @@ impl<'a> MessageProcessor<'a> {
 	fn status(
 		&mut self,
 		text: String,
-		mention: Option<String>,
 		visibility: Visibility,
-		in_reply_to_id: Option<String>
+		mention: Option<String>,
+		in_reply_to_id: Option<String>,
+		poll_options: Option<PollOptions>,
 	) -> Result<()> {
 		info!("Start posting a Status");
 
@@ -57,15 +60,29 @@ impl<'a> MessageProcessor<'a> {
 			None => text,
 		};
 
-		let post = statuses::post(self.conn, self.emojis.emojify(&text))
-			.visibility(visibility);
+		let post = match poll_options {
+			Some(po) => {
+				statuses::post_with_poll(
+					self.conn,
+					self.emojis.emojify(&text),
+					po.poll_options,
+					po.expires_in,
+				)
+			},
+			None => {
+				statuses::post(
+					self.conn,
+					self.emojis.emojify(&text)
+				)
+			},
+		};
 
 		let post = match in_reply_to_id {
 			Some(id) => post.in_reply_to_id(id),
 			None => post,
 		};
 
-		match post.send() {
+		match post.visibility(visibility).send() {
 			Ok(posted) => info!(
 				"Posting a status is complete: {}",
 				posted.status().unwrap().content().unwrap().replace("\n", "")
@@ -110,14 +127,31 @@ impl<'a> MessageProcessor<'a> {
 
 }
 
+#[derive(Debug)]
 pub enum Message {
 	Status {
 		text: String,
-		mention: Option<String>,
 		visibility: Visibility,
+		mention: Option<String>,
 		in_reply_to_id: Option<String>,
+		poll_options: Option<PollOptions>,
 	},
 	Follow(Account),
 	Unfollow(Account),
 	Error(String, crate::Error),
+}
+
+#[derive(Debug, Clone)]
+pub struct PollOptions {
+	poll_options: Vec<String>,
+	expires_in: u64,
+}
+
+impl PollOptions {
+	pub fn new(poll_options: Vec<String>, expires_in: u64) -> Self {
+		PollOptions {
+			poll_options,
+			expires_in,
+		}
+	}
 }

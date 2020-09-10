@@ -1,11 +1,12 @@
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc;
-use mastors::entities::Status;
+use chrono:: { Local, Timelike };
+use mastors::entities::{ Status, Visibility };
+use regex::Regex;
 use serde::Deserialize;
 use crate::{
 	Error,
-	Message,
 	Monsters,
 	Result,
 	contents::*,
@@ -14,17 +15,27 @@ use crate::{
 		transform_vec_string_to_vec_regex,
 	},
 };
+use crate::message_processor::{
+	Message,
+	PollOptions,
+};
 
 const DATA: &str = "drakeema-data/features/response/status.json";
+const TAG_P_REGEX: &str = r#"</?[pP][^>]*>"#;
+const TAG_OTHER_REGEX: &str = r#"</?[^>]+>"#;
 
 pub struct StatusProcessor {
 	responders: Vec<Box<dyn Responder>>,
 	keema: Keema,
 	config: Config,
+	tag_p_regex: Regex,
+	tag_other_regex: Regex,
 }
 
 impl StatusProcessor {
 	pub fn load() -> Result<Self> {
+		use std::str::FromStr;
+
 		info!("Initialize StatusProcessor");
 
 		let config: Config = serde_json::from_reader(
@@ -45,6 +56,8 @@ impl StatusProcessor {
 			responders,
 			keema,
 			config,
+			tag_p_regex: Regex::from_str(TAG_P_REGEX)?,
+			tag_other_regex: Regex::from_str(TAG_OTHER_REGEX)?,
 		})
 	}
 
@@ -60,49 +73,70 @@ impl StatusProcessor {
 			return;
 		}
 
-        let response: Option<String>;
+		let text: Option<String>;
+		let mut visibility = status.visibility();
+		let mut mention = Some(status.account().acct().to_owned());
+		let mut in_reply_to_id = if status.account().is_remote() || !status.is_public() {
+			Some(status.id().to_owned())
+		} else {
+			None
+		};
+		let mut poll_options: Option<PollOptions> = None;
 
         if self.is_oshiete_keemasan(&content) {
             info!("Text matched keywords of Oshiete: {}", content);
 
-			let rc = ResponseCriteria::new(chrono::Local::now(), content);
-            let mut r = self.responders.iter()
+			let rc = ResponseCriteria::new(Local::now(), content);
+            let mut t = self.responders.iter()
                 .map(|i| i.respond(&rc))
                 .filter(|i| i.is_some())
                 .map(|i| i.unwrap())
                 .collect::<Vec<String>>()
                 .join("\n");
 
-            if r.is_empty() {
-                r = String::from("？");
+            if t.is_empty() {
+                t = String::from("？");
             }
 
-			response = Some(r);
-		} else if self.is_keemasan(&content) && self.is_healthcheck(content){
+			text = Some(t);
+		} else if self.is_keemasan(content) && self.is_healthcheck(content){
 			info!("Text matched keywords of healthcheck: {}", content);
 
-			use chrono::{
-				Timelike,
-				Local,
-			};
-
-			response = self.config.healthcheck_responses.get(
+			text = self.config.healthcheck_responses.get(
 				Local::now().second() as usize % self.config.healthcheck_responses.len()
 			).map(|r| r.to_owned());
+		} else if self.is_keemasan(&content) && self.can_i(content) {
+			info!("Text matched keywords of Can I?: {}", content);
+
+			let now = Local::now();
+			if self.is_poll(now.second()) {
+				info!("Get the special response of Can I?: {}", now);
+
+				text = Some(self.format_for_poll(content));
+				visibility = Visibility::Public;
+				mention = None;
+				in_reply_to_id = None;
+				poll_options = Some(PollOptions::new(
+					self.config.can_i_poll_options.clone(),
+					self.config.can_i_poll_expires_in,
+				));
+			} else {
+				text = self.config.can_i_responses.get(
+					now.second() as usize % self.config.can_i_responses.len()
+				)
+				.map(|r| r.to_owned());
+			}
         } else {
-            response = self.keema.respond(&ResponseCriteria::new(chrono::Local::now(), content));
+            text = self.keema.respond(&ResponseCriteria::new(Local::now(), content));
         }
 
-        if let Some(response) = response {
+        if let Some(text) = text {
 			tx.send(Message::Status {
-				text: response,
-				mention: Some(status.account().acct().to_owned()),
-				visibility: status.visibility(),
-				in_reply_to_id: if status.account().is_remote() || !status.is_public() {
-					Some(status.id().to_owned())
-				} else {
-					None
-				}
+				text,
+				visibility,
+				mention,
+				in_reply_to_id,
+				poll_options,
 			}).unwrap();
 		}
 	}
@@ -113,6 +147,14 @@ impl StatusProcessor {
 
 	fn is_healthcheck(&self, text: &str) -> bool {
 		self.config.healthcheck_regex.is_match(text)
+	}
+
+	fn can_i(&self, text: &str) -> bool {
+		self.config.can_i_regex.is_match(text)
+	}
+
+	fn is_poll(&self, sec: u32) -> bool {
+		self.config.can_i_poll_secs.iter().any(|s| s == &sec)
 	}
 
 	fn is_oshiete(&self, text: &str) -> bool {
@@ -126,21 +168,35 @@ impl StatusProcessor {
 	fn is_oshiete_keemasan(&self, text: &str) -> bool {
 		self.is_oshiete(text) && self.is_keemasan(text)
 	}
+
+	fn format_for_poll(&self, text: &str) -> String {
+		let s = self.config.keemasan_regex.replace_all(text, "").to_string();
+		let s = self.tag_p_regex.replace_all(&s, "\n").to_string();
+		self.tag_other_regex.replace_all(&s, "").to_string()
+	}
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct Config {
     #[serde(deserialize_with = "transform_string_to_regex")]
-    keemasan_regex: regex::Regex,
+	keemasan_regex: Regex,
+
     #[serde(deserialize_with = "transform_string_to_regex")]
-	oshiete_regex: regex::Regex,
+	oshiete_regex: Regex,
+
 	#[serde(deserialize_with = "transform_string_to_regex")]
-	healthcheck_regex: regex::Regex,
-	
+	healthcheck_regex: Regex,
 	healthcheck_responses: Vec<String>,
 
+	#[serde(deserialize_with = "transform_string_to_regex")]
+	can_i_regex: Regex,
+	can_i_responses: Vec<String>,
+	can_i_poll_secs: Vec<u32>,
+	can_i_poll_options: Vec<String>,
+	can_i_poll_expires_in: u64,
+
 	#[serde(deserialize_with = "transform_vec_string_to_vec_regex")]
-	ignore_acct_regex: Vec<regex::Regex>,
+	ignore_acct_regex: Vec<Regex>,
 }
 
 #[cfg(test)]
@@ -158,11 +214,15 @@ mod tests {
 	}
 
 	fn data(responders: Vec<Box<dyn Responder>>) -> StatusProcessor {
+		use std::str::FromStr;
+
 		let config = serde_json::from_str::<Config>(DATA).unwrap();
 		StatusProcessor {
 			responders,
 			keema: Keema::load().unwrap(),
 			config,
+			tag_p_regex: Regex::from_str(TAG_P_REGEX).unwrap(),
+			tag_other_regex: Regex::from_str(TAG_OTHER_REGEX).unwrap(),
 		}
 	}
 
@@ -180,6 +240,25 @@ mod tests {
 				":m_drakee: :m_drakeema: :m_drakeemage: :m_drakeetaho:",
 				":d_sleep:"
 			],
+			"can_i_regex": "(?:いい|イイ|良い)(?:ですか|かな|の|かしら)*[!！]*[?？]",
+			"can_i_responses": [
+				"どうぞ！",
+				"ダメです！",
+				"しょうがない場合がある。",
+				"許されない場合がある。",
+				":x_exkun: へぇ〜！イイネ！",
+				":x_ripo02: :x_dame:"
+			],
+			"can_i_poll_secs": [
+				41
+			],
+			"can_i_poll_options": [
+				"はい",
+				"どちらかと言えばはい",
+				"どちらかと言えばいいえ",
+				"いいえ"
+			],
+			"can_i_poll_expires_in": 300,
 			"ignore_acct_regex": [
 				"@example.com$",
 				"^hoge@fuga.com$",

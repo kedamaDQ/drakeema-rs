@@ -68,9 +68,10 @@ impl ContentsWorker {
 			if !text.is_empty() {
 				tx.send(Message::Status{
 					text,
-					mention: None,
 					visibility: Visibility::Public,
-					in_reply_to_id: None
+					mention: None,
+					in_reply_to_id: None,
+					poll_options: None,
 				}).unwrap();
 			}
 

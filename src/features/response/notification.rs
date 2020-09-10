@@ -43,17 +43,19 @@ impl NotificationProcessor {
 				tx.send(Message::Follow(notification.account().clone())).unwrap();
 				tx.send(Message::Status{
 					text: self.config.followed_message.to_owned(),
-					mention: Some(notification.account().acct().to_owned()),
 					visibility: status.visibility(),
+					mention: Some(notification.account().acct().to_owned()),
 					in_reply_to_id: Some(status.id().to_owned()),
+					poll_options: None,
 				}).unwrap();
 			} else if self.config.unfollow_regex.is_match(content) {
 				tx.send(Message::Unfollow(notification.account().clone())).unwrap();
 				tx.send(Message::Status{
 					text: self.config.unfollowed_message.to_owned(),
-					mention: Some(notification.account().acct().to_owned()),
 					visibility: status.visibility(),
+					mention: Some(notification.account().acct().to_owned()),
 					in_reply_to_id: Some(status.id().to_owned()),
+					poll_options: None,
 				}).unwrap();
 			}
 		}
