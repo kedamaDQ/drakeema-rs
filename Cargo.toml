@@ -1,6 +1,6 @@
 [package]
 name = "drakeema-rs"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["kedamaDQ <kedama@foresdon.jp>"]
 edition = "2018"
 description = "A bot for foresdon.jp"
