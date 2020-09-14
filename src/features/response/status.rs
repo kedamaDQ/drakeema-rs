@@ -76,15 +76,15 @@ impl StatusProcessor {
 		let text: Option<String>;
 		let mut visibility = status.visibility();
 		let mut mention = Some(status.account().acct().to_owned());
-		let mut in_reply_to_id = if status.account().is_remote() || !status.is_public() {
-			Some(status.id().to_owned())
-		} else {
-			None
-		};
+		let mut in_reply_to_id = Some(status.id().to_owned());
 		let mut poll_options: Option<PollOptions> = None;
 
         if self.is_oshiete_keemasan(&content) {
             info!("Text matched keywords of Oshiete: {}", content);
+
+			if status.account().is_local() && status.is_public() {
+				in_reply_to_id = None;
+			};
 
 			let rc = ResponseCriteria::new(Local::now(), content);
             let mut t = self.responders.iter()
@@ -127,7 +127,7 @@ impl StatusProcessor {
 				.map(|r| r.to_owned());
 			}
         } else {
-            text = self.keema.respond(&ResponseCriteria::new(Local::now(), content));
+			text = self.keema.respond(&ResponseCriteria::new(Local::now(), content));
         }
 
         if let Some(text) = text {
