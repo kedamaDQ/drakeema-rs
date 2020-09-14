@@ -60,32 +60,25 @@ impl<'a> MessageProcessor<'a> {
 			None => text,
 		};
 
-		let post = match poll_options {
-			Some(po) => {
-				statuses::post_with_poll(
-					self.conn,
-					self.emojis.emojify(&text),
-					po.poll_options,
-					po.expires_in,
-				)
-			},
-			None => {
-				statuses::post(
-					self.conn,
-					self.emojis.emojify(&text)
-				)
-			},
-		};
-
+		let post = statuses::post(self.conn).status(self.emojis.emojify(text));
 		let post = match in_reply_to_id {
 			Some(id) => post.in_reply_to_id(id),
 			None => post,
 		};
 
-		match post.visibility(visibility).send() {
+		let result = match poll_options {
+			Some(po) => post
+				.visibility(visibility)
+				.poll(po.poll_options, po.expires_in)
+				.send(),
+			None => post
+				.visibility(visibility)
+				.send(),
+		};
+		match result {
 			Ok(posted) => info!(
 				"Posting a status is complete: {}",
-				posted.status().unwrap().content().unwrap().replace("\n", "")
+				posted.content().unwrap().replace("\n", "")
 			),
 			Err(e) => error!("Failed to post status: {}", e),
 		};
