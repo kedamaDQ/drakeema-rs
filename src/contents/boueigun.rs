@@ -82,6 +82,7 @@ impl<'a> Responder for Boueigun<'a> {
 
 			let info = self.current_status(criteria.at());
 			let response = self.information
+				.replace("__LOCATION__", info.current.location.as_str())
 				.replace("__CURRENT_MONSTER__", info.current.display())
 				.replace("__RESISTANCES__", info.current.resistances().display(None::<Vec<String>>).as_str())
 				.replace("__NEXT_MONSTER__", info.next.display())
@@ -133,6 +134,7 @@ impl<'a> BoueigunMonsters<'a> {
 					inner.push(BoueigunMonster {
 						id: monster.id.to_owned(),
 						monster: m,
+						location: monster.location.to_owned(),
 						duration: monster.duration,
 					});
 				},
@@ -152,6 +154,7 @@ struct BoueigunMonster<'a> {
 	#[allow(unused)]
 	id: String,
 	monster: &'a Monster,
+	location: String,
 	duration: i64,
 }
 
@@ -175,6 +178,7 @@ pub struct BoueigunJson {
 struct MonsterJson {
 	id: String,
 	monster_id: String,
+	location: String,
 	duration: i64,
 }
 
