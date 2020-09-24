@@ -46,7 +46,7 @@ fn main() {
 	} else {
 		env_logger::init();
 	}
-	info!("Start drakeema");
+	info!("Start drakeema: {}", env!("CARGO_PKG_VERSION"));
 
 	let contents_worker = match ContentsWorker::load() {
 		Ok(cw) => cw,
