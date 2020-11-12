@@ -35,6 +35,11 @@ impl EventListener for UserTimelineListener {
 			debug!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
+
+		if is_boosted(status) {
+			debug!("Skip update: Status is boosted status");
+			return Ok(());
+		}
 		self.tx.send(TimelineMessage::Status(status.clone())).unwrap();
 		Ok(())
 	}
@@ -48,4 +53,8 @@ impl EventListener for UserTimelineListener {
 
 fn is_overlapped_at_local_and_home(status: &Status) -> bool {
     status.account().is_local() && status.visibility() == Visibility::Public
+}
+
+fn is_boosted(status: &Status) -> bool {
+	status.reblog().is_some()
 }
