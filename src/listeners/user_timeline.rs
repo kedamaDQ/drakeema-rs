@@ -1,7 +1,10 @@
 use std::sync::Arc;
 use std::sync::mpsc;
 use mastors::prelude::*;
-use super::TimelineMessage;
+use super::{
+	utils,
+	TimelineMessage,
+};
 
 pub struct UserTimelineListener {
 	me: Arc<Account>, 
@@ -26,20 +29,27 @@ impl EventListener for UserTimelineListener {
 	fn update(&self, status: &Status) -> Result<(), Self::Error> {
 		debug!("Receive update: {:?}", status);
 
-		if status.account().id() == self.me.id() {
+
+		if utils::is_mine(status, &self.me) { 
 			debug!("Skip update: Status posted by myself: {}", status.id());
 			return Ok(());
 		}
 
-		if is_overlapped_at_local_and_home(status) {
+		if utils::is_overlapped_at_local_and_home(status) {
 			debug!("Skip update: Status overlapped at local and home: {}", status.id());
 			return Ok(());
 		}
 
-		if is_boosted(status) {
+		if utils::is_boosted(status) {
 			debug!("Skip update: Status is boosted status");
 			return Ok(());
 		}
+
+		if utils::has_spoiler_text(status) {
+			debug!("Skip update: Status has spoiler text: {}", status.id());
+			return Ok(());
+		}
+
 		self.tx.send(TimelineMessage::Status(status.clone())).unwrap();
 		Ok(())
 	}
@@ -49,12 +59,4 @@ impl EventListener for UserTimelineListener {
 		self.tx.send(TimelineMessage::Notification(notification.clone())).unwrap();
 		Ok(())
 	}
-}
-
-fn is_overlapped_at_local_and_home(status: &Status) -> bool {
-    status.account().is_local() && status.visibility() == Visibility::Public
-}
-
-fn is_boosted(status: &Status) -> bool {
-	status.reblog().is_some()
 }
