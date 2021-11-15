@@ -192,29 +192,29 @@ pub(crate) mod tests {
 		let bou = data();
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2020, 6, 5).and_hms(15, 0, 0)).current.id,
-			"juga1"
+			bou.current_status(Local.ymd(2021, 11, 15).and_hms(6, 0, 0)).current.id,
+			"ryurin"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2020, 6, 5).and_hms(15, 59, 59)).current.id,
-			"juga1"
+			bou.current_status(Local.ymd(2021, 11, 15).and_hms(6, 59, 59)).current.id,
+			"ryurin"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2020, 6, 5).and_hms(16, 00, 00)).current.id,
-			"tekki1"
+			bou.current_status(Local.ymd(2021, 11, 15).and_hms(7, 00, 00)).current.id,
+			"nenkai"
 		);
 
 		// last of 1st lap
 		assert_eq!(
 			bou.current_status(bou.reference_date + chrono::Duration::minutes(bou.total_duration - 1)).current.id,
-			"all2"
+			"kaiyo"
 		);
 		// 2nd lap
 		assert_eq!(
 			bou.current_status(bou.reference_date + chrono::Duration::minutes(bou.total_duration)).current.id,
-			"juga1"
+			"ryurin"
 		);
 	}
 
@@ -223,32 +223,32 @@ pub(crate) mod tests {
 		let bou = data();
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2020, 6, 5).and_hms(14, 59, 59)).current.id,
-			"all2"
+			bou.current_status(Local.ymd(2021, 11, 15).and_hms(5, 59, 59)).current.id,
+			"kaiyo"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2020, 6, 5).and_hms(14, 0, 0)).current.id,
-			"all2"
+			bou.current_status(Local.ymd(2021, 11, 15).and_hms(5, 0, 0)).current.id,
+			"kaiyo"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2020, 6, 5).and_hms(13, 59, 59)).current.id,
-			"ryurin2"
+			bou.current_status(Local.ymd(2021, 11, 15).and_hms(4, 59, 59)).current.id,
+			"all3"
 		);
 		// last of 1st lap
 		assert_eq!(
 			bou.current_status(bou.reference_date - chrono::Duration::minutes(bou.total_duration - 1)).current.id,
-			"juga1"
+			"ryurin"
 		);
 		// 2nd lap
 		assert_eq!(
 			bou.current_status(bou.reference_date - chrono::Duration::minutes(bou.total_duration)).current.id,
-			"juga1"
+			"ryurin"
 		);
 		assert_eq!(
 			bou.current_status(bou.reference_date - chrono::Duration::minutes(bou.total_duration) - chrono::Duration::nanoseconds(1)).current.id,
-			"all2"
+			"kaiyo"
 		);
 
 	}
@@ -266,20 +266,23 @@ pub(crate) mod tests {
 
 	}
 	const DATA: &str = r#"{
-	"reference_date": "2020-06-05T15:00:00.000+09:00",
-	"information": "現在アストルティア防衛軍は __CURRENT_MONSTER__ に攻められています！\n__RESISTANCES__ の耐性があると良いようです！\nあと __REMAIN__ 分で __NEXT_MONSTER__ が攻めてきます！",
+	"reference_date": "2021-11-15T06:00:00.000+09:00",
+	"information": "現在アストルティア防衛軍は__LOCATION__で __CURRENT_MONSTER__ と交戦中です！\n__RESISTANCES__ の耐性があると良いようです！\nあと __REMAIN__ 分で __NEXT_MONSTER__ が攻めてきます！",
 	"nickname_regex": "(?:防衛軍|ぼうえいぐん|防衛)",
 	"monsters": [
-		{ "id": "juga1", "monster_id": "boueigun_juga", "duration": 60 },
-		{ "id": "tekki1", "monster_id": "boueigun_tekki", "duration": 60 },
-		{ "id": "zoma1", "monster_id": "boueigun_zoma", "duration": 60 },
-		{ "id": "ryurin1", "monster_id": "boueigun_ryurin", "duration": 60 },
-		{ "id": "all1", "monster_id": "boueigun_all", "duration": 60 },
-		{ "id": "shigoku1", "monster_id": "boueigun_shigoku", "duration": 60 },
-		{ "id": "kyochu1", "monster_id": "boueigun_kyochu", "duration": 60 },
-		{ "id": "kaiyo1", "monster_id": "boueigun_kaiyo", "duration": 60 },
-		{ "id": "ryurin2", "monster_id": "boueigun_ryurin", "duration": 60 },
-		{ "id": "all2", "monster_id": "boueigun_all", "duration": 60 }
+		{ "id": "ryurin", "monster_id": "boueigun_ryurin", "location": "岳都ガタラ", "duration": 60 },
+		{ "id": "nenkai", "monster_id": "boueigun_nenkai", "location": "ツスクルの村", "duration": 60 },
+		{ "id": "karetsu1", "monster_id": "boueigun_karetsu", "location": "ジュレットの町", "duration": 60 },
+		{ "id": "all1", "monster_id": "boueigun_all", "location": "各地", "duration": 60 },
+		{ "id": "juga", "monster_id": "boueigun_juga", "location": "獅子門", "duration": 60 },
+		{ "id": "tekki", "monster_id": "boueigun_tekki", "location": "獅子門", "duration": 60 },
+		{ "id": "karetsu2", "monster_id": "boueigun_karetsu", "location": "ジュレットの町", "duration": 60 },
+		{ "id": "all2", "monster_id": "boueigun_all", "location": "各地", "duration": 60 },
+		{ "id": "zoma", "monster_id": "boueigun_zoma", "location": "獅子門", "duration": 60 },
+		{ "id": "shigoku", "monster_id": "boueigun_shigoku", "location": "ツスクルの村", "duration": 60 },
+		{ "id": "kyochu", "monster_id": "boueigun_kyochu", "location": "チョッピ荒野", "duration": 60 },
+		{ "id": "all3", "monster_id": "boueigun_all", "location": "各地", "duration": 60 },
+		{ "id": "kaiyo", "monster_id": "boueigun_kaiyo", "location": "ジュレットの町", "duration": 60 }
 	]
 	}"#;
 }
