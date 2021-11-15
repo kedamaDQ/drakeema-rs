@@ -32,7 +32,7 @@ impl Monsters {
 		let monsters_json: MonstersJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		let mut inner = HashMap::new();
 
@@ -53,7 +53,7 @@ impl Monsters {
     		let m: Monster = serde_json::from_reader(
     			BufReader::new(File::open(&file)?)
 			)
-			.map_err(|e| Error::ParseJsonError(file.to_string_lossy().to_string(), e))?;    
+			.map_err(|e| Error::UnparseableJson(file.to_string_lossy().to_string(), e))?;    
 
     		inner.insert(m.id().to_owned(), m);
     	}
@@ -84,7 +84,7 @@ impl Responder for Monsters {
 				} else {
 					self.information
 						.replace("__NAME__", m.official_name())
-						.replace("__RESISTANCES__", &resistances)
+						.replace("__RESISTANCES__", resistances)
 				}
 			})
 			.collect::<Vec<String>>()

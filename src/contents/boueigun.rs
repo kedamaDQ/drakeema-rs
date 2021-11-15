@@ -26,7 +26,7 @@ impl<'a> Boueigun<'a> {
 		let inner: BoueigunJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		let monsters = BoueigunMonsters::new(&inner.monsters)?;
 		let total_duration = monsters.iter()
@@ -139,7 +139,7 @@ impl<'a> BoueigunMonsters<'a> {
 					});
 				},
 				None => return Err(
-					Error::UnknownMonsterIdError(DATA, monster.id.to_owned())
+					Error::UnknownMonsterId(DATA, monster.id.to_owned())
 				),
 			};
 		}

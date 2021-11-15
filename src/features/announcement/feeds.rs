@@ -34,7 +34,7 @@ impl FeedsWorker {
 		let json: FeedAnnouncementJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		Ok(FeedsWorker{
 			feeds: Arc::new(Feeds::new(json.feeds, json.title_regexes, json.user_agent)?),
@@ -108,7 +108,7 @@ impl Feeds {
 			let feed = feed_rs::parser::parse(
 				self.client.get(feed_conf.url.clone()).send()?.text()?.as_bytes()
 			)
-			.map_err(|e| Error::ParseFeedError(feed_conf.url.to_string(), e))?;
+			.map_err(|e| Error::UnparseableFeed(feed_conf.url.to_string(), e))?;
 
 			debug!("Load last check ID from {}", &feed_conf.tmp);
 			let last_id = tmp_file::load_tmp_as_string(&feed_conf.tmp)?;
@@ -131,7 +131,7 @@ impl Feeds {
 					self.regexes.iter()
 						.any(|r| r.is_match(&e.title.as_ref().unwrap().content))
 				})
-				.for_each(|e| entries.push(Entry::new(&e)));
+				.for_each(|e| entries.push(Entry::new(e)));
 		}
 
 		Ok(entries)

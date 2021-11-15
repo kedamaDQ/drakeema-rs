@@ -33,7 +33,7 @@ impl RateLimit {
 			self.count += 1;
 
 			if self.count > self.limit {
-				return Err(Error::ExceedRateLimitError(self.limit))
+				return Err(Error::ExceedRateLimit(self.limit))
 			} else {
 				self.count
 			}

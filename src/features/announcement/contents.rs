@@ -28,7 +28,7 @@ impl ContentsWorker {
 		let json: Json = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		let contents: Vec<Box<dyn Announcer>> = vec![
 			Box::new(PeriodicContents::load()?),
@@ -60,8 +60,7 @@ impl ContentsWorker {
 			info!("Start announcing about contents: {:?}", criteria);
 			let text = contents.iter()
 				.map(|c| c.announce(&criteria))
-				.filter(|c| c.is_some())
-				.map(|c| c.unwrap())
+				.flatten()
 				.collect::<Vec<String>>()
 				.join("\n\n");
 

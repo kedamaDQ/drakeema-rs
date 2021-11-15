@@ -26,7 +26,7 @@ impl WeeklyActivity {
 		serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))
 	}
 }
 
@@ -59,10 +59,7 @@ impl Announcer for WeeklyActivity {
 		debug!("Latest activity: {:?}", latest_activity);
 
 		let last_announced = match tmp_file::load_tmp_as_i64(TMP) {
-			Ok(opt) => match opt {
-				Some(data) => data,
-				None => 0,
-			},
+			Ok(opt) => opt.unwrap_or(0),
 			Err(e) => {
 				error!("Failed to get last announced date: {}", e);
 				return None;
