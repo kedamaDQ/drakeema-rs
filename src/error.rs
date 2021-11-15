@@ -4,80 +4,80 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error)]
 pub enum Error {
-	#[error(display = "Parse json error: {}, {}", _0, _1)]
-	ParseJsonError(
+	#[error(display = "parse json error: {}, {}", _0, _1)]
+	UnparseableJson(
 		String,
 		#[error(source)]
 		serde_json::Error,
 	),
 
 	#[error(display = "IO error: {}", _0)]
-	IoError(
+	Io(
 		#[error(souce, from)]
 		std::io::Error,
 	),
 
 	#[error(display = "Data not presented: file: {}, data: {}", _0, _1)]
-	DataNotPresentError(
+	DataNotPresented(
 		&'static str,
 		String,
 	),
 
 	#[error(display = "Unknown monster ID: file: {}, id: {}", _0, _1)]
-	UnknownMonsterIdError(
+	UnknownMonsterId(
 		&'static str,
 		String,
 	),
 
 	#[error(display = "Invalid regex: {}", _0)]
-	InvalidRegexError(
+	InvalidRegex(
 		#[error(source, from)]
 		regex::Error,
 	),
 
 	#[error(display = "Mastors API call error: {}", _0)]
-	MastorsApiError(
+	MastorsApi(
 		#[error(source, from)]
 		mastors::Error,
 	),
 
 	#[error(display = "Lost the streaming connection: timeline: {}, retry: {}", _0, _1)]
-	LostStreamingConnectionError(
+	LostStreamingConnection(
 		mastors::streaming::StreamType,
 		usize,
 	),
 
 	#[error(display = "Failed to load tmporary data: {}, {}", _0, _1)]
-	LoadTmpDataError(
+	LoadTmpData(
 		String,
 		std::io::Error,
 	),
 
 	#[error(display = "Unexpected temporary data format: {}, {}", _0, _1)]
-	TmpDataFormatError(
+	TmpDataFormat(
 		String,
 		std::num::ParseIntError,
 	),
 
 	#[error(display = "Failed to save temporary data: {}, {}", _0, _1)]
-	SaveTmpDataError(
+	SaveTmpData(
 		String,
 		std::io::Error,
 	),
 
 	#[error(display = "Rate limit exceeded: limit: {}", _0)]
-	ExceedRateLimitError(
+	ExceedRateLimit(
 		usize
 	),
 
 	#[error(display = "HTTP request error: {}", _0)]
-	HttpRequestError(
+	HttpRequest(
 		#[error(source, from)]
 		reqwest::Error,
 	),
 
 	#[error(display = "Failed to parse feed: {}, {}", _0, _1)]
-	ParseFeedError(
+	UnparseableFeed(
 		String,
 		feed_rs::parser::ParseFeedError,
 	),

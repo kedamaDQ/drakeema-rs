@@ -28,7 +28,7 @@ impl<'a> Emojis<'a> {
 		let config: EmojiConfig = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		custom_emojis::get(conn)
 			.send()
@@ -42,7 +42,7 @@ impl<'a> Emojis<'a> {
 					cache: Self::build_emojis(&config.category_regex, &ce),
 				}
 			})
-			.map_err(Error::MastorsApiError)
+			.map_err(Error::MastorsApi)
 	}
 
 	pub fn emoji(&mut self) -> String {
@@ -64,7 +64,7 @@ impl<'a> Emojis<'a> {
 		trace!("Start emojify: {}", text);
 
 		let placeholder = self.placeholder.clone();
-		while text.find(placeholder.as_str()).is_some() {
+		while text.contains(placeholder.as_str()) {
 			text = text.replacen(placeholder.as_str(), self.emoji().as_str(), 1);
 		}
 		text
@@ -138,13 +138,11 @@ pub(crate) mod tests {
 		let emojis_orig: mastors::entities::Emojis = serde_json::from_str(DATA).unwrap();
 
 		let monster_emojis = emojis_orig.iter()
-			.filter(|e| e.category().is_some() && e.category().unwrap() == "モンスター")
-			.collect::<Vec<&mastors::entities::Emoji>>();
+			.filter(|e| e.category().is_some() && e.category().unwrap() == "モンスター");
 		let character_emojis = emojis_orig.iter()
-			.filter(|e| e.category().is_some() && e.category().unwrap() == "キャラクター")
-			.collect::<Vec<&mastors::entities::Emoji>>();
+			.filter(|e| e.category().is_some() && e.category().unwrap() == "キャラクター");
 
-		assert_eq!(monster_emojis.len() + character_emojis.len(), emojis.len());
+		assert_eq!(monster_emojis.count() + character_emojis.count(), emojis.len());
 	}
 
 	pub(crate) fn data(conn: &Connection) -> super::Emojis {

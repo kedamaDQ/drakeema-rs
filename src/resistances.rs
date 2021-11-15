@@ -139,11 +139,11 @@ impl Resistances {
     	let larger: &Vec<Vec<Resistance>>;
     	let smaller: &Vec<Vec<Resistance>>;
     	if self.len() > other.len() {
-    		larger =  &self;
+    		larger =  self;
     		smaller = &other;
     	} else {
 			larger = &other;
-    		smaller = &self;
+    		smaller = self;
 		}
 
 		Resistances {

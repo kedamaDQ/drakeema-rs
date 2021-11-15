@@ -41,7 +41,7 @@ impl StatusProcessor {
 		let config: Config = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		let responders: Vec<Box<dyn Responder>> = vec![
 			Box::new(Jashin::load()?),
@@ -79,7 +79,7 @@ impl StatusProcessor {
 		let mut in_reply_to_id = Some(status.id().to_owned());
 		let mut poll_options: Option<PollOptions> = None;
 
-        if self.is_oshiete_keemasan(&content) {
+        if self.is_oshiete_keemasan(content) {
             info!("Text matched keywords of Oshiete: {}", content);
 
 			if status.account().is_local() && status.is_public() {
@@ -89,8 +89,7 @@ impl StatusProcessor {
 			let rc = ResponseCriteria::new(Local::now(), content);
             let mut t = self.responders.iter()
                 .map(|i| i.respond(&rc))
-                .filter(|i| i.is_some())
-                .map(|i| i.unwrap())
+				.flatten()
                 .collect::<Vec<String>>()
                 .join("\n");
 
@@ -105,7 +104,7 @@ impl StatusProcessor {
 			text = self.config.healthcheck_responses.get(
 				Local::now().second() as usize % self.config.healthcheck_responses.len()
 			).map(|r| r.to_owned());
-		} else if self.is_keemasan(&content) && self.can_i(content) {
+		} else if self.is_keemasan(content) && self.can_i(content) {
 			info!("Text matched keywords of Can I?: {}", content);
 
 			let now = Local::now();

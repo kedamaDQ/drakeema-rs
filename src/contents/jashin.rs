@@ -31,7 +31,7 @@ impl<'a> Jashin<'a> {
     	let mut inner: JashinJson = serde_json::from_reader(
     		BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		inner.tables.sort_by(|a, b| a.start_day.cmp(&b.start_day));
 
@@ -126,7 +126,7 @@ impl<'a> Tables<'a> {
 		}
 
 		if inner.is_empty() {
-			Err(Error::DataNotPresentError(DATA, "element of tables".to_owned()))
+			Err(Error::DataNotPresented(DATA, "element of tables".to_owned()))
 		} else {
 			Ok(Tables {
 				reference_date,
@@ -142,9 +142,9 @@ impl<'a> Tables<'a> {
 				at.day() > table.start_day ||
 				(at.day() == table.start_day && at.time() >= self.reference_date.time())
 			})
-			.unwrap_or(
+			.unwrap_or_else(||
 				// Safe unwrapping because constructer new() guarantees inner is not empty.
-				&self.last().unwrap()
+				self.last().unwrap()
 			)
 	}
 }
@@ -184,7 +184,7 @@ impl<'a> Titles<'a> {
 				match monsters.get(monster_id) {
 					Some(monster) => mon.push(monster),
 					None => return Err(
-						Error::UnknownMonsterIdError(DATA, monster_id.to_owned())
+						Error::UnknownMonsterId(DATA, monster_id.to_owned())
 					)
 				}
 			}
@@ -198,7 +198,7 @@ impl<'a> Titles<'a> {
 
 		if inner.is_empty() {
 			Err(
-				Error::DataNotPresentError(DATA, "element of titles".to_owned())
+				Error::DataNotPresented(DATA, "element of titles".to_owned())
 			)
 		} else {
 			Ok(Titles {

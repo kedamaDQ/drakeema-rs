@@ -107,5 +107,5 @@ fn listen(
 			last_retry = Local::now();
 		};
 	}
-	Err(Error::LostStreamingConnectionError(stream_type, MAX_RETRY))
+	Err(Error::LostStreamingConnection(stream_type, MAX_RETRY))
 }

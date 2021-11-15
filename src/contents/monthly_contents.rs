@@ -24,7 +24,7 @@ impl MonthlyContents {
 		serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))
 	}
 
 	fn contents_to_start(&self, at: &DateTime<Local>) -> String {

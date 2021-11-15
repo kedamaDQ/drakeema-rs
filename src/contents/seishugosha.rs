@@ -30,7 +30,7 @@ impl<'a> Seishugosha<'a> {
 		let inner: SeishugoshaJson = serde_json::from_reader(
 			BufReader::new(File::open(DATA)?)
 		)
-		.map_err(|e| Error::ParseJsonError(DATA.to_owned(), e))?;
+		.map_err(|e| Error::UnparseableJson(DATA.to_owned(), e))?;
 
 		Ok(Seishugosha {
 			monsters: SeishugoshaMonsters::new(&inner.monsters)?,
@@ -120,11 +120,11 @@ impl<'a> SeishugoshaMonsters<'a> {
 			match monsters.get(&monster.monster_id) {
 				Some(m) => inner.push(SeishugoshaMonster {
 					id: monster.id.to_owned(),
-					monster: &m,
+					monster: m,
 					offset: monster.offset,
 				}),
 				None => return Err(
-					Error::UnknownMonsterIdError(DATA, monster.monster_id.clone())
+					Error::UnknownMonsterId(DATA, monster.monster_id.clone())
 				),
 			}
 		}
