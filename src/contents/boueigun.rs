@@ -161,7 +161,7 @@ struct BoueigunMonster<'a> {
 impl<'a> std::ops::Deref for BoueigunMonster<'a> {
 	type Target = Monster;
 	fn deref(&self) -> &Self::Target {
-		&self.monster
+		self.monster
 	}
 }
 
