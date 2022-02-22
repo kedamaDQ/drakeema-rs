@@ -95,8 +95,3 @@ impl Announcer for WeeklyActivity {
 		Some(announcement)
 	}
 }
-
-#[derive(Debug, Clone, Deserialize)]
-struct WeeklyActivityJson {
-	announcement: String,
-}

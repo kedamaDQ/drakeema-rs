@@ -84,6 +84,7 @@ impl std::ops::Deref for WeeklyContents {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct WeeklyContent {
+	#[allow(dead_code)]
 	id: String,
 	display: String,
 	reset_days: Vec<u32>,

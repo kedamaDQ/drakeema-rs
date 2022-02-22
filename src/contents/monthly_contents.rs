@@ -77,6 +77,7 @@ impl Announcer for MonthlyContents {
 
 #[derive(Debug, Clone, Deserialize)]
 struct Content {
+	#[allow(dead_code)]
 	id: String,
 	display: String,
 	days: Vec<u32>,
