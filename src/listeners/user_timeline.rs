@@ -50,7 +50,7 @@ impl EventListener for UserTimelineListener {
 			return Ok(());
 		}
 
-		self.tx.send(TimelineMessage::Status(status.clone())).unwrap();
+		self.tx.send(TimelineMessage::Status(Box::new(status.clone()))).unwrap();
 		Ok(())
 	}
 

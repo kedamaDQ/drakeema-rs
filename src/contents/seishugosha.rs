@@ -164,6 +164,7 @@ pub struct SeishugoshaJson {
 	reference_date: DateTime<Local>,
 	level_names: Vec<String>,
 	announcement: AnnouncerJson,
+	#[allow(dead_code)]
 	information: String,
 	#[serde(deserialize_with = "transform_string_to_regex")]
 	nickname_regex: regex::Regex,

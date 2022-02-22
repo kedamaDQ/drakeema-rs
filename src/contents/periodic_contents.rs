@@ -81,6 +81,7 @@ impl Announcer for PeriodicContents {
 
 #[derive(Debug, Clone, Deserialize)]
 struct Content {
+	#[allow(dead_code)]
 	id: String,
 	display: String,
 	months: Option<Vec<u32>>,
