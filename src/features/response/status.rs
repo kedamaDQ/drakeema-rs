@@ -46,6 +46,7 @@ impl StatusProcessor {
 		let responders: Vec<Box<dyn Responder>> = vec![
 			Box::new(Jashin::load()?),
 			Box::new(Seishugosha::load()?),
+			Box::new(Panigulm::load()?),
 			Box::new(Boueigun::load()?),
 			Box::new(Monsters::load()?),
 		];

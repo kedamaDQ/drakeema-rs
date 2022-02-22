@@ -36,6 +36,7 @@ impl ContentsWorker {
 			Box::new(MonthlyContents::load()?),
 			Box::new(Seishugosha::load()?),
 			Box::new(Jashin::load()?),
+			Box::new(Panigulm::load()?),
 			Box::new(WeeklyActivity::load()?),
 		];
 
