@@ -12,7 +12,7 @@ use mastors::entities::{
 
 #[derive(Debug, Clone)]
 pub enum TimelineMessage {
-	Status(Status),
+	Status(Box<Status>),
 	Notification(Notification),
 }
 
