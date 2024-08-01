@@ -31,13 +31,11 @@ impl<'a> Konmeiko<'a> {
 		)
 		.map_err(|e| Error::UnpersebleJson(DATA.to_owned(), e))?;
 
-
+		Ok(Konmeiko {
+			monsters: KonmeikoMonsters::new(innter.monsters)?,
+			inner,
+		})
 	}
-
-	Ok(Konmeiko {
-		monsters: KonmeikoMonsters::new(innter.monsters)?,
-		inner,
-	})
 }
 
 impl<'a> std::ops::Deref for Konmeiko<'a> {
