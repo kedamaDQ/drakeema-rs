@@ -47,6 +47,7 @@ impl StatusProcessor {
 			Box::new(Jashin::load()?),
 			Box::new(Seishugosha::load()?),
 			Box::new(Panigulm::load()?),
+			Box::new(Konmeiko::load()?),
 			Box::new(Boueigun::load()?),
 			Box::new(Monsters::load()?),
 		];
