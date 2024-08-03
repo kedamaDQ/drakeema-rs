@@ -98,12 +98,12 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 10).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 10, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "テンの日です！");
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 12).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 12, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "じゅうににちで12日です！");
 	}
@@ -113,7 +113,7 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 9).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 9, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "明日はテンの日です！");
 	}
@@ -123,7 +123,7 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 2, 9).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 2, 9, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "プクの日です！\n明日はテンの日です！");
 	}
@@ -133,7 +133,7 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 2, 5).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 2, 5, 12, 0, 0).unwrap())
 		);
 		assert!(an.is_none());
 	}

@@ -95,19 +95,18 @@ impl AnnouncementTimes {
 	}
 
 	pub fn duration_secs(&self, now: DateTime<Local>) -> u64 {
-		match self.inner.iter()
+		let t = match self.inner.iter()
 			.rev()
 			.find(|t| t > &&now.time())
 		{
 			Some(time) => {
-				now.date().and_time(*time)
+				now.date_naive().and_time(*time)
 			},
 			None => {
-				(now.date() + Duration::days(1)).and_time(*self.inner.get(0).unwrap())
+				(now.date_naive() + Duration::days(1)).and_time(*self.inner.get(0).unwrap())
 			},
-		}
-		.map(|t| (t - now).num_seconds() as u64)
-		.unwrap()
+		};
+		(t - now.date_naive().and_time(now.time())).num_seconds() as u64
 	}
 }
 
@@ -124,16 +123,18 @@ mod tests {
 	#[test]
 	fn test_duration_secs() {
 		let at = at();
-		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 30);
+		let dt = Local.with_ymd_and_hms(2020, 9, 6, 6, 1, 30).unwrap();
 		assert_eq!(at.duration_secs(dt), 43200);
 
-		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 31);
+		let dt = Local.with_ymd_and_hms(2020, 9, 6, 6, 1, 31).unwrap();
 		assert_eq!(at.duration_secs(dt), 43199);
 
-		let dt = Local.ymd(2020, 9, 6).and_hms(6, 1, 29);
+		let dt = Local.with_ymd_and_hms(2020, 9, 6, 6, 1, 29).unwrap();
 		assert_eq!(at.duration_secs(dt), 43201);
 
-		let dt = Local.ymd(2020, 9, 6).and_hms_milli(6, 1, 29, 1);
+		let dt = Local.timestamp_millis_opt(
+			Local.with_ymd_and_hms(2020, 9, 6, 6, 1, 29).unwrap().timestamp_millis() + 1
+		).unwrap();
 		assert_eq!(at.duration_secs(dt), 43200);
 	}
 

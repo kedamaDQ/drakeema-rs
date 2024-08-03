@@ -195,28 +195,28 @@ pub(crate) mod tests {
 		let ssgs = data();
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 20, 6, 0, 0).unwrap(), 0),
 			"Ⅰ"
 		);
 
 		// Edge of first day
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 21).and_hms(5, 59, 59), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 21, 5, 59, 59).unwrap(), 0),
 			"Ⅰ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 21).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 21, 6, 0, 0).unwrap(), 0),
 			"Ⅱ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 22).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 22, 6, 0, 0).unwrap(), 0),
 			"Ⅲ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 23).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 23, 6, 0, 0).unwrap(), 0),
 			"Ⅰ"
 		);
 	}
@@ -226,33 +226,33 @@ pub(crate) mod tests {
 		let ssgs = data();
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 20, 6, 0, 0).unwrap(), 0),
 			"Ⅰ"
 		);
 
 		// Edge of 1 day ago
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 20).and_hms(5, 59, 59), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 20, 5, 59, 59).unwrap(), 0),
 			"Ⅲ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 19).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 19, 6, 0, 0).unwrap(), 0),
 			"Ⅲ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 18).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 18, 6, 0, 0).unwrap(), 0),
 			"Ⅱ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 17).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 17, 6, 0, 0).unwrap(), 0),
 			"Ⅰ"
 		);
 
 		assert_eq!(
-			ssgs.level_name(chrono::Local.ymd(2018, 4, 16).and_hms(6, 0, 0), 0),
+			ssgs.level_name(chrono::Local.with_ymd_and_hms(2018, 4, 16, 6, 0, 0).unwrap(), 0),
 			"Ⅲ"
 		);
 

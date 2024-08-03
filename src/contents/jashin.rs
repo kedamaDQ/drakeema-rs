@@ -351,68 +351,68 @@ pub(crate) mod tests {
 
 		// 1st title
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 7, 10).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 7, 10, 6, 0, 0).unwrap()).id,
 			"five_elemental_armors"
 		);
 
 		// Edge of 1st title
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 7, 25).and_hms(5, 59, 59)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 7, 25, 5, 59, 59).unwrap()).id,
 			"five_elemental_armors"
 		);
 
 		// 2nd title
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 7, 25).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 7, 25, 6, 0, 0).unwrap()).id,
 			"dream_masako"
 		);
 
 		// Edge of 2nd title
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 8, 10).and_hms(5, 59, 59)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 8, 10, 5, 59, 59).unwrap()).id,
 			"dream_masako"
 		);
 
 
 		// 3rd title
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 8, 10).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 8, 10, 6, 0, 0).unwrap()).id,
 			"malucia_thoma"
 		);
 
 		// 4th title
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 8, 25).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 8, 25, 6, 0, 0).unwrap()).id,
 			"malucia_masako"
 		);
 
 		// last title of 1st period of 1st table
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 11, 10).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 11, 10, 6, 0, 0).unwrap()).id,
 			"raz_zel"
 		);
 
 		// 1st title of 2nd period of 1st table
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 12, 10).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 12, 10, 6, 0, 0).unwrap()).id,
 			"five_elemental_armors"
 		);
 
 		// 6th title of 1st period of 2nd table
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 12, 25).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 12, 25, 6, 0, 0).unwrap()).id,
 			"zel_masako"
 		);
 
 		// Last title of 1st period of 2nd table
 		assert_eq!(
-			jashin.title(Local.ymd(2021, 4, 25).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2021, 4, 25, 6, 0, 0).unwrap()).id,
 			"calamity_malucia"
 		);
 
 		// 1st title of 2nd period of 2nd table
 		assert_eq!(
-			jashin.title(Local.ymd(2021, 5, 25).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2021, 5, 25, 6, 0, 0).unwrap()).id,
 			"dream_masako"
 		);
 	}
@@ -423,17 +423,17 @@ pub(crate) mod tests {
 
 		// Edge of title before reference date
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 7, 10).and_hms(5, 59, 59)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 7, 10, 5, 59, 59).unwrap()).id,
 			"calamity_malucia"
 		);
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 6, 25).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 6, 25, 6, 0, 0).unwrap()).id,
 			"calamity_malucia"
 		);
 
 		// 2 titles before the reference date
 		assert_eq!(
-			jashin.title(Local.ymd(2020, 6, 10).and_hms(6, 0, 0)).id,
+			jashin.title(Local.with_ymd_and_hms(2020, 6, 10, 6, 0, 0).unwrap()).id,
 			"raz_zel"
 		);
 	}
