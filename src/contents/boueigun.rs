@@ -185,24 +185,27 @@ struct MonsterJson {
 #[cfg(test)]
 pub(crate) mod tests {
 	use super::*;
-	use chrono::offset::TimeZone;
+	use chrono::{
+		Local,
+		TimeZone,
+	};
 
 	#[test]
 	fn test_current_positive() {
 		let bou = data();
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2021, 11, 15).and_hms(6, 0, 0)).current.id,
+			bou.current_status(Local.with_ymd_and_hms(2021, 11, 15, 6, 0, 0).unwrap()).current.id,
 			"ryurin"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2021, 11, 15).and_hms(6, 59, 59)).current.id,
+			bou.current_status(Local.with_ymd_and_hms(2021, 11, 15, 6, 59, 59).unwrap()).current.id,
 			"ryurin"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2021, 11, 15).and_hms(7, 00, 00)).current.id,
+			bou.current_status(Local.with_ymd_and_hms(2021, 11, 15, 7, 00, 00).unwrap()).current.id,
 			"nenkai"
 		);
 
@@ -223,17 +226,17 @@ pub(crate) mod tests {
 		let bou = data();
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2021, 11, 15).and_hms(5, 59, 59)).current.id,
+			bou.current_status(Local.with_ymd_and_hms(2021, 11, 15, 5, 59, 59).unwrap()).current.id,
 			"kaiyo"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2021, 11, 15).and_hms(5, 0, 0)).current.id,
+			bou.current_status(Local.with_ymd_and_hms(2021, 11, 15, 5, 0, 0).unwrap()).current.id,
 			"kaiyo"
 		);
 
 		assert_eq!(
-			bou.current_status(Local.ymd(2021, 11, 15).and_hms(4, 59, 59)).current.id,
+			bou.current_status(Local.with_ymd_and_hms(2021, 11, 15, 4, 59, 59).unwrap()).current.id,
 			"all3"
 		);
 		// last of 1st lap

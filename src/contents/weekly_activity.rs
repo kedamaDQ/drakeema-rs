@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::BufReader;
-use chrono::{ Duration, Local, NaiveDateTime };
+use chrono::{ Duration, Local, DateTime };
 use mastors::prelude::*;
 use mastors::api::v1::instance::activity;
 use serde::Deserialize;
@@ -73,8 +73,8 @@ impl Announcer for WeeklyActivity {
 		}
 
 		let start_date = Local.from_utc_datetime(
-			&NaiveDateTime::from_timestamp(latest_activity.week(), 0)
-		).date();
+			&DateTime::from_timestamp(latest_activity.week(), 0).unwrap().naive_utc()
+		).date_naive();
 		let end_date = start_date + Duration::days(6);
 
 		debug!("Week to announce: from: {}, to: {}", start_date, end_date);

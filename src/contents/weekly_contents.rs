@@ -99,9 +99,9 @@ pub(crate) mod tests {
 	#[test]
 	fn test_contents_to_start_is_exist() {
 		let wc = data();
-		let sunday = Local.ymd(2020, 8, 23).and_hms(12, 0, 0);
-		let monday = Local.ymd(2020, 8, 24).and_hms(12, 0, 0);
-		let tuesday = Local.ymd(2020, 8, 25).and_hms(12, 0, 0);
+		let sunday = Local.with_ymd_and_hms(2020, 8, 23, 12, 0, 0).unwrap();
+		let monday = Local.with_ymd_and_hms(2020, 8, 24, 12, 0, 0).unwrap();
+		let tuesday = Local.with_ymd_and_hms(2020, 8, 25, 12, 0, 0).unwrap();
 
 		assert!(!(wc.contents_to_start(sunday).is_empty()));
 		assert!(!(wc.contents_to_start(monday).is_empty()));
@@ -111,9 +111,9 @@ pub(crate) mod tests {
 	#[test]
 	fn test_contents_to_start_is_not_exist() {
 		let wc = data();
-		let wednesday = Local.ymd(2020, 8, 26).and_hms(12, 0, 0);
-		let thursday = Local.ymd(2020, 8, 27).and_hms(12, 0, 0);
-		let friday = Local.ymd(2020, 8, 28).and_hms(12, 0, 0);
+		let wednesday = Local.with_ymd_and_hms(2020, 8, 26, 12, 0, 0).unwrap();
+		let thursday = Local.with_ymd_and_hms(2020, 8, 27, 12, 0, 0).unwrap();
+		let friday = Local.with_ymd_and_hms(2020, 8, 28, 12, 0, 0).unwrap();
 
 		assert!(wc.contents_to_start(wednesday).is_empty());
 		assert!(wc.contents_to_start(thursday).is_empty());
@@ -123,9 +123,9 @@ pub(crate) mod tests {
 	#[test]
 	fn test_contents_to_end_is_exist() {
 		let wc = data();
-		let saturday = Local.ymd(2020, 8, 22).and_hms(12, 0, 0);
-		let sunday = Local.ymd(2020, 8, 23).and_hms(12, 0, 0);
-		let monday = Local.ymd(2020, 8, 24).and_hms(12, 0, 0);
+		let saturday = Local.with_ymd_and_hms(2020, 8, 22, 12, 0, 0).unwrap();
+		let sunday = Local.with_ymd_and_hms(2020, 8, 23, 12, 0, 0).unwrap();
+		let monday = Local.with_ymd_and_hms(2020, 8, 24, 12, 0, 0).unwrap();
 
 		assert!(!(wc.contents_to_end(saturday).is_empty()));
 		assert!(!(wc.contents_to_end(sunday).is_empty()));
@@ -135,9 +135,9 @@ pub(crate) mod tests {
 	#[test]
 	fn test_contents_to_end_is_not_exist() {
 		let wc = data();
-		let tuesday = Local.ymd(2020, 8, 25).and_hms(12, 0, 0);
-		let wednesday = Local.ymd(2020, 8, 26).and_hms(12, 0, 0);
-		let thursday = Local.ymd(2020, 8, 27).and_hms(12, 0, 0);
+		let tuesday = Local.with_ymd_and_hms(2020, 8, 25, 12, 0, 0).unwrap();
+		let wednesday = Local.with_ymd_and_hms(2020, 8, 26, 12, 0, 0).unwrap();
+		let thursday = Local.with_ymd_and_hms(2020, 8, 27, 12, 0, 0).unwrap();
 
 		assert!(wc.contents_to_end(tuesday).is_empty());
 		assert!(wc.contents_to_end(wednesday).is_empty());

@@ -177,53 +177,53 @@ pub(crate) mod tests {
 		let pani = data();
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 20).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 20, 6, 0, 0).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 27).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 27, 5, 59, 59).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 27).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 27, 6, 0, 0).unwrap()).id(),
 			"panigulm_elgios"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 3, 6).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 6, 5, 59, 59).unwrap()).id(),
 			"panigulm_elgios"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 3, 6).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 6, 6, 0, 0).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 3, 13).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 13, 5, 59, 59).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 3, 13).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 13, 6, 0, 0).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		// run `cargo test -- --nocapture`
 		let ac = AnnouncementCriteria {
-			at: Local.ymd(2022, 2, 20).and_hms(6, 0, 0),
+			at: Local.with_ymd_and_hms(2022, 2, 20, 6, 0, 0).unwrap(),
 		};
 		println!("Announce: {:#?}", pani.announce(&ac));
 
 		let ac = AnnouncementCriteria {
-			at: Local.ymd(2022, 2, 21).and_hms(6, 0, 0),
+			at: Local.with_ymd_and_hms(2022, 2, 21, 6, 0, 0).unwrap(),
 		};
 		println!("Announce: {:#?}", pani.announce(&ac));
 
 		let ac = AnnouncementCriteria {
-			at: Local.ymd(2022, 2, 27).and_hms(5, 59, 59),
+			at: Local.with_ymd_and_hms(2022, 2, 27, 5, 59, 59).unwrap(),
 		};
 		println!("Announce: {:#?}", pani.announce(&ac));
 	}
@@ -233,37 +233,37 @@ pub(crate) mod tests {
 		let pani = data();
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 20).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 20, 5, 59, 59).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 13).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 13, 6, 0, 0).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 13).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 13, 5, 59, 59).unwrap()).id(),
 			"panigulm_elgios"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 6).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 6, 6, 0, 0).unwrap()).id(),
 			"panigulm_elgios"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 2, 6).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 6, 5, 59, 59).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 1, 30).and_hms(6, 0, 0)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 1, 30, 6, 0, 0).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.ymd(2022, 1, 30).and_hms(5, 59, 59)).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2022, 1, 30, 5, 59, 59).unwrap()).id(),
 			"panigulm_almana"
 		);
 	}
@@ -272,16 +272,16 @@ pub(crate) mod tests {
 	fn test_respond() {
 		let pani = data();
 
-		let rc = ResponseCriteria { text: "あああパニパニあああ".to_owned(), at: Local.ymd(2022, 2, 22).and_hms(7, 0, 0) };
+		let rc = ResponseCriteria { text: "あああパニパニあああ".to_owned(), at: Local.with_ymd_and_hms(2022, 2, 22, 7, 0, 0).unwrap() };
 		assert!(pani.respond(&rc).is_some());
 
-		let rc = ResponseCriteria { text: "源世庫".to_owned(), at: Local.ymd(2022, 2, 22).and_hms(7, 0, 0) };
+		let rc = ResponseCriteria { text: "源世庫".to_owned(), at: Local.with_ymd_and_hms(2022, 2, 22, 7, 0, 0).unwrap() };
 		assert!(pani.respond(&rc).is_some());
 
-		let rc = ResponseCriteria { text: "パニゴロモ".to_owned(), at: Local.ymd(2022, 2, 22).and_hms(7, 0, 0) };
+		let rc = ResponseCriteria { text: "パニゴロモ".to_owned(), at: Local.with_ymd_and_hms(2022, 2, 22, 7, 0, 0).unwrap() };
 		assert!(pani.respond(&rc).is_none());
 
-		let rc = ResponseCriteria { text: "源世庫".to_owned(), at: Local.ymd(2022, 2, 22).and_hms(7, 0, 0) };
+		let rc = ResponseCriteria { text: "源世庫".to_owned(), at: Local.with_ymd_and_hms(2022, 2, 22, 7, 0, 0).unwrap() };
 		println!("Response: {:?}", pani.respond(&rc));
 	}
 

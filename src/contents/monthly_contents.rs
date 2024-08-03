@@ -93,12 +93,12 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 1).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 1, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクル、不思議の魔塔は今日からです！");
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 15).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 15, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクルは今日からです！");
 	}
@@ -108,12 +108,12 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 31).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 31, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクル、不思議の魔塔は今日までです！");
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 14).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 14, 12, 0, 0).unwrap())
 		);
 		assert_eq!(an.unwrap(), "今期の :m_nasubimera: シアトリカルクロニクルは今日までです！");
 	}
@@ -123,7 +123,7 @@ pub(crate) mod tests {
 		let pc = data();
 
 		let an = pc.announce(
-			&AnnouncementCriteria::new(Local.ymd(2020, 8, 16).and_hms(12, 0, 0))
+			&AnnouncementCriteria::new(Local.with_ymd_and_hms(2020, 8, 16, 12, 0, 0).unwrap())
 		);
 		assert!(an.is_none());
 	}
