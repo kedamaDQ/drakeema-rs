@@ -32,7 +32,6 @@ impl ContentsWorker {
 
 		let contents: Vec<Box<dyn Announcer>> = vec![
 			Box::new(PeriodicContents::load()?),
-			Box::new(WeeklyContents::load()?),
 			Box::new(MonthlyContents::load()?),
 			Box::new(Seishugosha::load()?),
 			Box::new(Jashin::load()?),
