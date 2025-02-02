@@ -8,7 +8,6 @@ pub(crate) mod panigulm;
 pub(crate) mod periodic_contents;
 pub(crate) mod seishugosha;
 pub(crate) mod weekly_activity;
-pub(crate) mod weekly_contents;
 
 pub use boueigun::Boueigun;
 //pub use feed::Feeds;
@@ -20,7 +19,6 @@ pub use panigulm::Panigulm;
 pub use periodic_contents::PeriodicContents;
 pub use seishugosha::Seishugosha;
 pub use weekly_activity::WeeklyActivity;
-pub use weekly_contents::WeeklyContents;
 
 use chrono::{ DateTime, Local };
 
