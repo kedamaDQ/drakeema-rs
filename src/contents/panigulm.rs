@@ -61,7 +61,7 @@ impl<'a> Panigulm<'a> {
 		};
 
 		let current_index: usize = usize::try_from(
-			(at - ref_date).num_weeks().abs() % i64::try_from(monsters.len()).unwrap()
+			(at - ref_date).num_days().abs() / self.num_days % i64::try_from(monsters.len()).unwrap()
 		).unwrap();
 
 		monsters.get(current_index).unwrap()
@@ -149,6 +149,7 @@ impl<'a> cmp::Ord for PanigulmMonster<'a> {
 #[derive(Debug, Clone, Deserialize)]
 pub struct PanigulmJson {
 	reference_date: DateTime<Local>,
+	num_days: i64,
 	announcement: String,
 	announcement_at_start: String,
 	announcement_at_end: String,
@@ -177,53 +178,53 @@ pub(crate) mod tests {
 		let pani = data();
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 20, 6, 0, 0).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 1, 6, 0, 0).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 27, 5, 59, 59).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 4, 5, 59, 59).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 27, 6, 0, 0).unwrap()).id(),
-			"panigulm_elgios"
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 4, 6, 0, 0).unwrap()).id(),
+			"panigulm_fordina"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 6, 5, 59, 59).unwrap()).id(),
-			"panigulm_elgios"
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 7, 5, 59, 59).unwrap()).id(),
+			"panigulm_fordina"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 6, 6, 0, 0).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 7, 6, 0, 0).unwrap()).id(),
+			"panigulm_dydalmos"
+		);
+
+		assert_eq!(
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 25, 5, 59, 59).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 13, 5, 59, 59).unwrap()).id(),
-			"panigulm_almana"
-		);
-
-		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 3, 13, 6, 0, 0).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 25, 6, 0, 0).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		// run `cargo test -- --nocapture`
 		let ac = AnnouncementCriteria {
-			at: Local.with_ymd_and_hms(2022, 2, 20, 6, 0, 0).unwrap(),
+			at: Local.with_ymd_and_hms(2025, 2, 1, 6, 0, 0).unwrap(),
 		};
 		println!("Announce: {:#?}", pani.announce(&ac));
 
 		let ac = AnnouncementCriteria {
-			at: Local.with_ymd_and_hms(2022, 2, 21, 6, 0, 0).unwrap(),
+			at: Local.with_ymd_and_hms(2022, 2, 4, 6, 0, 0).unwrap(),
 		};
 		println!("Announce: {:#?}", pani.announce(&ac));
 
 		let ac = AnnouncementCriteria {
-			at: Local.with_ymd_and_hms(2022, 2, 27, 5, 59, 59).unwrap(),
+			at: Local.with_ymd_and_hms(2022, 2, 24, 5, 59, 59).unwrap(),
 		};
 		println!("Announce: {:#?}", pani.announce(&ac));
 	}
@@ -233,37 +234,37 @@ pub(crate) mod tests {
 		let pani = data();
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 20, 5, 59, 59).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 2, 1, 5, 59, 59).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 13, 6, 0, 0).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 1, 29, 6, 0, 0).unwrap()).id(),
 			"panigulm_almana"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 13, 5, 59, 59).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 1, 29, 5, 59, 59).unwrap()).id(),
 			"panigulm_elgios"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 6, 6, 0, 0).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 1, 26, 6, 0, 0).unwrap()).id(),
 			"panigulm_elgios"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 2, 6, 5, 59, 59).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 1, 10, 5, 59, 59).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 1, 30, 6, 0, 0).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 1, 8, 6, 0, 0).unwrap()).id(),
 			"panigulm_jigenryu"
 		);
 
 		assert_eq!(
-			pani.monster_at(Local.with_ymd_and_hms(2022, 1, 30, 5, 59, 59).unwrap()).id(),
+			pani.monster_at(Local.with_ymd_and_hms(2025, 1, 8, 5, 59, 59).unwrap()).id(),
 			"panigulm_almana"
 		);
 	}
@@ -301,17 +302,23 @@ pub(crate) mod tests {
 		}
 	}
 
-	const DATA: &str = r#"{
-		"reference_date": "2022-02-20T06:00:00.000+09:00",
-		"announcement": "本日の源世庫パニガルムは __MONSTER__ です！",
-		"announcement_at_start": "源世庫パニガルムは本日から __MONSTER__、あると良い耐性は __RESISTANCES__ です！",
-		"announcement_at_end": "本日の源世庫パニガルムは __MONSTER1__ です！明日からは __MONSTER2__ が始まります！",
-		"information": "本日の源世庫パニガルムは __MONSTER__ です！あると良い耐性は __RESISTANCES__ です！",
-		"nickname_regex": "(?:(?:源世庫|げんせいこ|ゲンセイコ|ｹﾞﾝｾｲｺ)|(?:パニガルム|ぱにがるむ|ﾊﾟﾆｶﾞﾙﾑ|パニパニ|ぱにぱに|ﾊﾟﾆﾊﾟﾆ))",
-		"monster_ids": [
-			"panigulm_jigenryu",
-			"panigulm_elgios",
-			"panigulm_almana"
-		]
+	const DATA: &str = r#" {
+	"reference_date": "2025-02-01T06:00:00.000+09:00",
+	"num_days": 3,
+	"announcement": "本日の源世庫パニガルムは __MONSTER__ です！",
+	"announcement_at_start": "源世庫パニガルムは本日から __MONSTER__、あると良い耐性は __RESISTANCES__ です！",
+	"announcement_at_end": "本日の源世庫パニガルムは __MONSTER1__ です！明日からは __MONSTER2__ が始まります！",
+	"information": "本日の源世庫パニガルムは __MONSTER__ です！あると良い耐性は __RESISTANCES__ です！",
+	"nickname_regex": "(?:(?:源世庫|げんせいこ|ゲンセイコ|ｹﾞﾝｾｲｺ)|(?:パニガルム|ぱにがるむ|ﾊﾟﾆｶﾞﾙﾑ|パニパニ|ぱにぱに|ﾊﾟﾆﾊﾟﾆ))",
+	"monster_ids": [
+		"panigulm_jigenryu",
+		"panigulm_fordina",
+		"panigulm_dydalmos",
+		"panigulm_catcher",
+		"panigulm_fulupotea",
+		"panigulm_pultanus",
+		"panigulm_elgios",
+		"panigulm_almana"
+	]
 	}"#;
 }
